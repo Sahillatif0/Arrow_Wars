@@ -42,7 +42,7 @@ class PlayerKeys{
 };
 class Player{
     public:
-        Vector2 position,initial;
+        Vector2 position,initial,arrowVel;
         int health,radius,angle,Textx;
         Color color;
         double power;
@@ -57,17 +57,25 @@ class Player{
             initial.x = isLeft?100:700;
             initial.y = 500;
             arrow = Arrow(initial,{70,60},5,45,color,(isLeft)?1:-1);
+            arrowVel = {70,60};
         }
         void draw(){
             DrawCircle(position.x, position.y, radius, color);
+            float x=position.x,y=position.y;
+            int sign = isLeft?1:-1;
+            for(int i=10;i>=0;i--){
+                y -= (arrowVel.y*power * sin((angle*PI)/180.0) - 0.5 * gravity * ((10-i)*0.000001) * ((10-i)*0.000001));
+                x += sign*((arrowVel.x*power) * cos((angle*PI)/180.0));
+                DrawCircle(x, y, (7 - float (i/2)), Fade(color, power*0.1*i));
+            }
             drawText();
         }
         void drawText(){
             int x = Textx;
-            string health_str = "Health: " + to_string(health);
             string angle_str = "Angle: " + to_string(angle);
             string pow_str = "Power: "+to_string(int(power*100));
-            DrawText(health_str.c_str(), x, 20, 20, WHITE);
+            DrawRectangle(x, 20, health, 20, color);
+            DrawRectangleLines(x-2, 18, 102, 22, WHITE);
             DrawText(angle_str.c_str(), x, 50, 20, WHITE);
             DrawText(pow_str.c_str(), x, 80, 20, WHITE);
         }
@@ -80,6 +88,17 @@ class Player{
             }
         }
         void updateArrow(Player &p2){
+            if(turn){
+                float x = isLeft?(screenWidth-150):50, y = screenHeight-200;
+                string dist_str = to_string(abs(int (p2.position.x-arrow.position.x)))+"m";
+                DrawText(dist_str.c_str(), x, y, 20, WHITE);
+                // Draw right arrow
+                DrawLineEx(Vector2{x, y+30}, Vector2{x + 50, y+30}, 2, p2.color);
+                if(isLeft)
+                    DrawTriangle(Vector2{x + 50, y+30}, Vector2{x + 40, y + 20}, Vector2{x + 40, y + 40}, p2.color);
+                else
+                    DrawTriangle(Vector2{x, y+20}, Vector2{x - 10, y + 30}, Vector2{x, y + 40}, p2.color);
+            }
             if(isShooting){
             arrow.time += 1.0/60.0;
             arrow.angle = angle;
