@@ -43,7 +43,7 @@ class PlayerKeys{
 class Player{
     public:
         Vector2 position,initial,arrowVel;
-        int health,radius,angle,Textx;
+        int health,radius,angle,Textx,recentHitTimer;
         Color color;
         double power;
         Arrow arrow;
@@ -53,7 +53,7 @@ class Player{
         int downKeyCounter = 0;
         int rightKeyCounter = 0;
         int leftKeyCounter = 0;
-        Player(Vector2 pos= {0,0}, int h=100,int r=50, Color col=RED,PlayerKeys k = PlayerKeys(KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_ENTER),bool isLeft=true,bool isShooting=false,bool turn=false,int ang=45,double pow=0.6):position(pos),health(h),radius(r),color(col),angle(ang),power(pow),keys(k),isLeft(isLeft),isShooting(isShooting),turn(turn),Textx((isLeft)? 20 : screenWidth-120),settingUp(false){
+        Player(Vector2 pos= {0,0}, int h=100,int r=50, Color col=RED,PlayerKeys k = PlayerKeys(KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_ENTER),bool isLeft=true,bool isShooting=false,bool turn=false,int ang=45,double pow=0.6):position(pos),health(h),radius(r),color(col),angle(ang),power(pow),keys(k),isLeft(isLeft),isShooting(isShooting),turn(turn),Textx((isLeft)? 20 : screenWidth-120),settingUp(false),recentHitTimer(0){
             initial.x = isLeft?100:700;
             initial.y = 500;
             arrow = Arrow(initial,{70,60},5,45,color,(isLeft)?1:-1);
@@ -74,7 +74,13 @@ class Player{
             int x = Textx;
             string angle_str = "Angle: " + to_string(angle);
             string pow_str = "Power: "+to_string(int(power*100));
-            DrawRectangle(x, 20, health, 20, color);
+            if(recentHitTimer>0){
+                Color color2 = recentHitTimer%3==0?RED:BLUE;
+                DrawRectangle(x, 20, health, 20, color2);
+                recentHitTimer--;
+            }
+            else
+                DrawRectangle(x, 20, health, 20, color);
             DrawRectangleLines(x-2, 18, 102, 22, WHITE);
             DrawText(angle_str.c_str(), x, 50, 20, WHITE);
             DrawText(pow_str.c_str(), x, 80, 20, WHITE);
@@ -92,13 +98,14 @@ class Player{
                 float x = isLeft?(screenWidth-150):50, y = screenHeight-200;
                 string dist_str = to_string(abs(int (p2.position.x-arrow.position.x)))+"m";
                 DrawText(dist_str.c_str(), x, y, 20, WHITE);
-                // Draw right arrow
                 DrawLineEx(Vector2{x, y+30}, Vector2{x + 50, y+30}, 2, p2.color);
                 if(isLeft)
                     DrawTriangle(Vector2{x + 50, y+30}, Vector2{x + 40, y + 20}, Vector2{x + 40, y + 40}, p2.color);
                 else
                     DrawTriangle(Vector2{x, y+20}, Vector2{x - 10, y + 30}, Vector2{x, y + 40}, p2.color);
             }
+            if(p2.recentHitTimer>0 && p2.health>0)
+                p2.health -= 2;
             if(isShooting){
             arrow.time += 1.0/60.0;
             arrow.angle = angle;
@@ -106,13 +113,13 @@ class Player{
             arrow.move(p2.position.x);
             arrow.velocity.x = arrow.initialVel.x*power;
             if(circleCollision(arrow.position,p2.position,arrow.radius, p2.radius) && ((arrow.moveDir!=1 && p2.isLeft) || (arrow.moveDir==1 && !p2.isLeft))){
-                p2.health -= 25;
                 arrow.reset();
                 arrow.position = initial;
                 isShooting = false;
                 turn = false;
                 p2.turn = true;
                 settingUp = true;
+                p2.recentHitTimer = 10;
             }
             if(p2.health<0 && p2.radius>0){
                 p2.health = 0;
