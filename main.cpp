@@ -16,24 +16,22 @@ bool circleCollision(Vector2 pos1, Vector2 pos2, int rad1, int rad2){
 
 class Arrow{
     public:
-        Vector2 position;
-        Vector2 velocity;
-        float initialVelX,initialVelY;
+        Vector2 position, velocity, initialVel;
         Color color;
         double time;
-        int moveDir,radius,angle;
-        Arrow(Vector2 pos= {0,0}, Vector2 vel={0,0},int rad=5, int ang=45, Color col=RED, int moveDir=1):position(pos),velocity(vel),radius(rad), angle(ang),color(col),time(0),moveDir(moveDir),initialVelX(velocity.x),initialVelY(velocity.y){}
+        int moveDir, radius, angle;
+        Arrow(Vector2 pos= {0,0}, Vector2 vel={0,0},int rad=5, int ang=45, Color col=RED, int moveDir=1):position(pos),velocity(vel),radius(rad), angle(ang),color(col),time(0),moveDir(moveDir),initialVel(velocity){}
         void draw(){
             DrawCircle(position.x, position.y, radius, color);
         }
-        void move(){
-            if((position.x < screenWidth/2 && moveDir==1) || (position.x > screenWidth/2 && moveDir==-1))
+        void move(int x){
+            if(((position.x < screenWidth/2 || (x>700 && x<(700+initialVel.x))) && moveDir==1) || ((position.x > screenWidth/2 || (x<100&&x>(100-initialVel.x))) && moveDir==-1))
                 position.x += moveDir*(velocity.x * cos((angle*PI)/180.0));
             position.y -= (velocity.y * sin((angle*PI)/180.0) - 0.5 * gravity * time * time);
             velocity.y -= gravity * time;
         }
         void reset(){
-            velocity = {initialVelX,initialVelY};
+            velocity = initialVel;
             time = 0;
         }
 };
@@ -51,7 +49,6 @@ class Player{
         Arrow arrow;
         bool isLeft, isShooting, turn,settingUp;
         PlayerKeys keys;
-        int shootKeyCounter = 0;
         int upKeyCounter = 0;
         int downKeyCounter = 0;
         int rightKeyCounter = 0;
@@ -87,8 +84,8 @@ class Player{
             arrow.time += 1.0/60.0;
             arrow.angle = angle;
             arrow.draw();
-            arrow.move();
-            arrow.velocity.x = arrow.initialVelX*power;
+            arrow.move(p2.position.x);
+            arrow.velocity.x = arrow.initialVel.x*power;
             if(circleCollision(arrow.position,p2.position,arrow.radius, p2.radius) && ((arrow.moveDir!=1 && p2.isLeft) || (arrow.moveDir==1 && !p2.isLeft))){
                 p2.health -= 25;
                 arrow.reset();
@@ -173,25 +170,21 @@ class Player{
             if(IsKeyPressed(keys.down) && (angle > 0)) angle--;
             if(IsKeyPressed(keys.right) && (power < 1.0)) power += 0.01;
             if(IsKeyPressed(keys.left) && (power > 0.0)) power -= 0.01;
-            if(IsKeyDown(keys.shoot)) {
-                shootKeyCounter++;
-                if(shootKeyCounter % 10 == 0) shoot();
-            } else shootKeyCounter = 0;
             if(IsKeyDown(keys.up) && (angle < 90)) {
                 upKeyCounter++;
-                if(upKeyCounter % 10 == 0) angle++;
+                if(upKeyCounter % 7 == 0) angle++;
             } else upKeyCounter = 0;
             if(IsKeyDown(keys.down) && (angle > 0)) {
                 downKeyCounter++;
-                if(downKeyCounter % 10 == 0)angle--;
+                if(downKeyCounter % 7 == 0)angle--;
             } else downKeyCounter = 0;
             if(IsKeyDown(keys.right) && (power < 1.0)) {
                 rightKeyCounter++;
-                if(rightKeyCounter % 10 == 0) power += 0.01;
+                if(rightKeyCounter % 7 == 0) power += 0.01;
             } else rightKeyCounter = 0;
             if(IsKeyDown(keys.left) && (power > 0.0)) {
                 leftKeyCounter++;
-                if(leftKeyCounter % 10 == 0) power -= 0.01;
+                if(leftKeyCounter % 7 == 0) power -= 0.01;
             } else leftKeyCounter = 0;
         }
 };
