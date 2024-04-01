@@ -15,11 +15,12 @@ bool circleCollision(Vector2 pos1, Vector2 pos2, int rad1, int rad2){
 }
 
 class Arrow{
+    Vector2 position, velocity, initialVel;
+    Color color;
+    double time;
+    int moveDir, radius, angle;
     public:
-        Vector2 position, velocity, initialVel;
-        Color color;
-        double time;
-        int moveDir, radius, angle;
+        friend class Player;
         Arrow(Vector2 pos= {0,0}, Vector2 vel={0,0},int rad=5, int ang=45, Color col=RED, int moveDir=1):position(pos),velocity(vel),radius(rad), angle(ang),color(col),time(0),moveDir(moveDir),initialVel(velocity){}
         void draw(){
             DrawCircle(position.x, position.y, radius, color);
@@ -42,32 +43,34 @@ class PlayerKeys{
 };
 class Player{
     public:
-        Vector2 position,initial,arrowVel;
+        Vector2 position,initial,arrowVel, mousePos;
         int health,radius,angle,Textx,recentHitTimer;
         Color color;
         double power;
         Arrow arrow;
-        bool isLeft, isShooting, turn,settingUp;
+        bool isLeft, isShooting, turn, settingUp, mouseDown;
         PlayerKeys keys;
         int upKeyCounter = 0;
         int downKeyCounter = 0;
         int rightKeyCounter = 0;
         int leftKeyCounter = 0;
-        Player(Vector2 pos= {0,0}, int h=100,int r=50, Color col=RED,PlayerKeys k = PlayerKeys(KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_ENTER),bool isLeft=true,bool isShooting=false,bool turn=false,int ang=45,double pow=0.6):position(pos),health(h),radius(r),color(col),angle(ang),power(pow),keys(k),isLeft(isLeft),isShooting(isShooting),turn(turn),Textx((isLeft)? 20 : screenWidth-120),settingUp(false),recentHitTimer(0){
+        Player(Vector2 pos= {0,0}, int h=100,int r=50, Color col=RED,PlayerKeys k = PlayerKeys(KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_ENTER),bool isLeft=true,bool isShooting=false,bool turn=false,int ang=45,double pow=0.6):position(pos),health(h),radius(r),color(col),angle(ang),power(pow),keys(k),isLeft(isLeft),isShooting(isShooting),turn(turn),Textx((isLeft)? 20 : screenWidth-120),settingUp(false),recentHitTimer(0),mouseDown(false){
             initial.x = isLeft?100:700;
             initial.y = 500;
             arrow = Arrow(initial,{70,60},5,45,color,(isLeft)?1:-1);
             arrowVel = {70,60};
+            mousePos = initial;
         }
         void draw(){
             DrawCircle(position.x, position.y, radius, color);
             float x=position.x,y=position.y;
             int sign = isLeft?1:-1;
-            for(int i=10;i>=0;i--){
-                y -= (arrowVel.y*power * sin((angle*PI)/180.0) - 0.5 * gravity * ((10-i)*0.000001) * ((10-i)*0.000001));
-                x += sign*((arrowVel.x*power) * cos((angle*PI)/180.0));
-                DrawCircle(x, y, (7 - float (i/2)), Fade(color, power*0.1*i));
-            }
+            if(mouseDown && turn)
+                for(int i=10;i>=0;i--){
+                    y -= (arrowVel.y*power * sin((angle*PI)/180.0) - 0.5 * gravity * ((10-i)*0.000001) * ((10-i)*0.000001));
+                    x += sign*((arrowVel.x*power) * cos((angle*PI)/180.0));
+                    DrawCircle(x, y, (7 - float (i/2)), Fade(color, power*0.1*i));
+                }
             drawText();
         }
         void drawText(){
@@ -191,27 +194,46 @@ class Player{
         }
         }
         void update(){
-            if (IsKeyPressed(keys.shoot)) shoot();
-            if(IsKeyPressed(keys.up) && (angle < 90)) angle++;
-            if(IsKeyPressed(keys.down) && (angle > 0)) angle--;
-            if(IsKeyPressed(keys.right) && (power < 1.0)) power += 0.01;
-            if(IsKeyPressed(keys.left) && (power > 0.0)) power -= 0.01;
-            if(IsKeyDown(keys.up) && (angle < 90)) {
-                upKeyCounter++;
-                if(upKeyCounter % 7 == 0) angle++;
-            } else upKeyCounter = 0;
-            if(IsKeyDown(keys.down) && (angle > 0)) {
-                downKeyCounter++;
-                if(downKeyCounter % 7 == 0)angle--;
-            } else downKeyCounter = 0;
-            if(IsKeyDown(keys.right) && (power < 1.0)) {
-                rightKeyCounter++;
-                if(rightKeyCounter % 7 == 0) power += 0.01;
-            } else rightKeyCounter = 0;
-            if(IsKeyDown(keys.left) && (power > 0.0)) {
-                leftKeyCounter++;
-                if(leftKeyCounter % 7 == 0) power -= 0.01;
-            } else leftKeyCounter = 0;
+            // if (IsKeyPressed(keys.shoot)) shoot();
+            // if(IsKeyPressed(keys.up) && (angle < 90)) angle++;
+            // if(IsKeyPressed(keys.down) && (angle > 0)) angle--;
+            // if(IsKeyPressed(keys.right) && (power < 1.0)) power += 0.01;
+            // if(IsKeyPressed(keys.left) && (power > 0.0)) power -= 0.01;
+            // if(IsKeyDown(keys.up) && (angle < 90)) {
+            //     upKeyCounter++;
+            //     if(upKeyCounter % 7 == 0) angle++;
+            // } else upKeyCounter = 0;
+            // if(IsKeyDown(keys.down) && (angle > 0)) {
+            //     downKeyCounter++;
+            //     if(downKeyCounter % 7 == 0)angle--;
+            // } else downKeyCounter = 0;
+            // if(IsKeyDown(keys.right) && (power < 1.0)) {
+            //     rightKeyCounter++;
+            //     if(rightKeyCounter % 7 == 0) power += 0.01;
+            // } else rightKeyCounter = 0;
+            // if(IsKeyDown(keys.left) && (power > 0.0)) {
+            //     leftKeyCounter++;
+            //     if(leftKeyCounter % 7 == 0) power -= 0.01;
+            // } else leftKeyCounter = 0;
+            if(IsMouseButtonDown(MOUSE_LEFT_BUTTON) && turn){
+                mouseDown = true;
+                Vector2 currMousePos = GetMousePosition();
+                double npower = isLeft?((mousePos.x - currMousePos.x)/200):((currMousePos.x - mousePos.x)/200);
+                if(npower<1.0 && npower>=0.0)
+                    power = npower;
+                else
+                    power = 1.0;
+                int nangle = (currMousePos.y - mousePos.y)/2;
+                if(nangle<90)
+                    angle = nangle;
+                else
+                    angle = 90;
+            }
+            if(IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && turn){
+                shoot();
+                mouseDown = false;
+                mousePos = initial;
+            }
         }
 };
 int main () {
