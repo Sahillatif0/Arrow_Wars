@@ -49,12 +49,7 @@ class Player{
         double power;
         Arrow arrow;
         bool isLeft, isShooting, turn, settingUp, mouseDown;
-        PlayerKeys keys;
-        int upKeyCounter = 0;
-        int downKeyCounter = 0;
-        int rightKeyCounter = 0;
-        int leftKeyCounter = 0;
-        Player(Vector2 pos= {0,0}, int h=100,int r=50, Color col=RED,PlayerKeys k = PlayerKeys(KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_ENTER),bool isLeft=true,bool isShooting=false,bool turn=false,int ang=45,double pow=0.6):position(pos),health(h),radius(r),color(col),angle(ang),power(pow),keys(k),isLeft(isLeft),isShooting(isShooting),turn(turn),Textx((isLeft)? 20 : screenWidth-120),settingUp(false),recentHitTimer(0),mouseDown(false){
+        Player(Vector2 pos= {0,0}, int h=100,int r=50, Color col=RED,bool isLeft=true,bool isShooting=false,bool turn=false,int ang=45,double pow=0.6):position(pos),health(h),radius(r),color(col),angle(ang),power(pow),isLeft(isLeft),isShooting(isShooting),turn(turn),Textx((isLeft)? 20 : screenWidth-120),settingUp(false),recentHitTimer(0),mouseDown(false){
             initial.x = isLeft?100:700;
             initial.y = 500;
             arrow = Arrow(initial,{70,60},5,45,color,(isLeft)?1:-1);
@@ -194,27 +189,6 @@ class Player{
         }
         }
         void update(){
-            // if (IsKeyPressed(keys.shoot)) shoot();
-            // if(IsKeyPressed(keys.up) && (angle < 90)) angle++;
-            // if(IsKeyPressed(keys.down) && (angle > 0)) angle--;
-            // if(IsKeyPressed(keys.right) && (power < 1.0)) power += 0.01;
-            // if(IsKeyPressed(keys.left) && (power > 0.0)) power -= 0.01;
-            // if(IsKeyDown(keys.up) && (angle < 90)) {
-            //     upKeyCounter++;
-            //     if(upKeyCounter % 7 == 0) angle++;
-            // } else upKeyCounter = 0;
-            // if(IsKeyDown(keys.down) && (angle > 0)) {
-            //     downKeyCounter++;
-            //     if(downKeyCounter % 7 == 0)angle--;
-            // } else downKeyCounter = 0;
-            // if(IsKeyDown(keys.right) && (power < 1.0)) {
-            //     rightKeyCounter++;
-            //     if(rightKeyCounter % 7 == 0) power += 0.01;
-            // } else rightKeyCounter = 0;
-            // if(IsKeyDown(keys.left) && (power > 0.0)) {
-            //     leftKeyCounter++;
-            //     if(leftKeyCounter % 7 == 0) power -= 0.01;
-            // } else leftKeyCounter = 0;
             if(IsMouseButtonDown(MOUSE_LEFT_BUTTON) && turn){
                 mouseDown = true;
                 Vector2 currMousePos = GetMousePosition();
@@ -237,10 +211,8 @@ class Player{
         }
 };
 int main () {
-    PlayerKeys player1Keys(KEY_W, KEY_S, KEY_A, KEY_D, KEY_SPACE);
-    PlayerKeys player2Keys(KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_ENTER);
-    Player player1({100,500}, 100,50, RED,player1Keys,true,false,true);
-    Player player2({1500,500}, 100,50, BLUE,player2Keys,false,false,false);
+    Player player1({100,500}, 100,50, RED,true,false,true);
+    Player player2({1500,500}, 100,50, BLUE,false,false,false);
     camera.offset = {screenWidth/2, screenHeight/2};
     camera.target = {screenWidth/2, screenHeight/2};
     camera.rotation = 0.0f;
