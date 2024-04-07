@@ -26,7 +26,7 @@ class Arrow{
             DrawCircle(position.x, position.y, radius, color);
         }
         void move(int x){
-            if(((position.x < screenWidth/2 || (x>700 && x<(700+initialVel.x))) && moveDir==1) || ((position.x > screenWidth/2 || (x<100&&x>(100-initialVel.x))) && moveDir==-1))
+            if(((position.x < screenWidth/2 || (x>(screenWidth - 150) && x<((screenWidth - 150)+initialVel.x))) && moveDir==1) || ((position.x > screenWidth/2 || (x<150&&x>(150-initialVel.x))) && moveDir==-1))
                 position.x += moveDir*(velocity.x * cos((angle*PI)/180.0));
             position.y -= (velocity.y * sin((angle*PI)/180.0) - 0.5 * gravity * time * time);
             velocity.y -= gravity * time;
@@ -43,15 +43,15 @@ class PlayerKeys{
 };
 class Player{
     public:
-        Vector2 position,initial,arrowVel, mousePos;
+        Vector2 position,initial,arrowVel, mousePos, screenDiffPos;
         int health,radius,angle,Textx,recentHitTimer;
         Color color;
         double power;
         Arrow arrow;
         bool isLeft, isShooting, turn, settingUp, mouseDown;
-        Player(Vector2 pos= {0,0}, int h=100,int r=50, Color col=RED,bool isLeft=true,bool isShooting=false,bool turn=false,int ang=45,double pow=0.6):position(pos),health(h),radius(r),color(col),angle(ang),power(pow),isLeft(isLeft),isShooting(isShooting),turn(turn),Textx((isLeft)? 20 : screenWidth-120),settingUp(false),recentHitTimer(0),mouseDown(false){
-            initial.x = isLeft?100:700;
-            initial.y = 500;
+        Player(Vector2 pos, int h=100,int r=50, Color col=RED,bool isLeft=true,bool isShooting=false,bool turn=false,int ang=45,double pow=0.6):position(pos),health(h),radius(r),color(col),angle(ang),power(pow),isLeft(isLeft),isShooting(isShooting),turn(turn),Textx((isLeft)? 20 : screenWidth-120),settingUp(false),recentHitTimer(0),mouseDown(false),screenDiffPos({150,150}){
+            initial.x = isLeft?screenDiffPos.x:(screenWidth - screenDiffPos.x);
+            initial.y = screenHeight - screenDiffPos.y;
             arrow = Arrow(initial,{70,60},5,45,color,(isLeft)?1:-1);
             arrowVel = {70,60};
             mousePos = initial;
@@ -93,7 +93,7 @@ class Player{
         }
         void updateArrow(Player &p2){
             if(turn){
-                float x = isLeft?(screenWidth-150):50, y = screenHeight-200;
+                float x = isLeft?(screenWidth-screenDiffPos.x):screenDiffPos.x, y = screenHeight-200;
                 string dist_str = to_string(abs(int (p2.position.x-arrow.position.x)))+"m";
                 DrawText(dist_str.c_str(), x, y, 20, WHITE);
                 DrawLineEx(Vector2{x, y+30}, Vector2{x + 50, y+30}, 2, p2.color);
@@ -117,7 +117,7 @@ class Player{
                 turn = false;
                 p2.turn = true;
                 settingUp = true;
-                p2.recentHitTimer = 10;
+                p2.recentHitTimer = 15;
             }
             if(p2.health<0 && p2.radius>0){
                 p2.health = 0;
@@ -139,20 +139,20 @@ class Player{
         if(settingUp){
             float moveAmount = (arrow.velocity.x*cos((angle*PI)/180.0))/2;
             if(p2.isLeft){
-                if(p2.position.x>100){
-                    if(p2.position.x-100<moveAmount){
-                        p2.position.x-=(p2.position.x-100);
-                        position.x-=(p2.position.x-100);
+                if(p2.position.x>screenDiffPos.x){
+                    if(p2.position.x-screenDiffPos.x<moveAmount){
+                        p2.position.x-=(p2.position.x-screenDiffPos.x);
+                        position.x-=(p2.position.x-screenDiffPos.x);
                     }
                     else{
                         p2.position.x-=moveAmount;
                         position.x-=moveAmount;
                     }
                 }
-                else if(p2.position.x<100){
-                    if(100-p2.position.x<moveAmount){
-                        p2.position.x+=(100-p2.position.x);
-                        position.x+=(100-p2.position.x);
+                else if(p2.position.x<screenDiffPos.x){
+                    if(screenDiffPos.x-p2.position.x<moveAmount){
+                        p2.position.x+=(screenDiffPos.x-p2.position.x);
+                        position.x+=(screenDiffPos.x-p2.position.x);
                     }
                     else{
                         p2.position.x+=moveAmount;
@@ -163,19 +163,19 @@ class Player{
                     settingUp = false;
             }
             else{
-                if(p2.position.x<700){
-                    if(700-p2.position.x<moveAmount){
-                        p2.position.x+=(700-p2.position.x);
-                        position.x+=(700-p2.position.x);
+                if(p2.position.x<(screenWidth - screenDiffPos.x)){
+                    if((screenWidth - screenDiffPos.x)-p2.position.x<moveAmount){
+                        p2.position.x+=((screenWidth - screenDiffPos.x)-p2.position.x);
+                        position.x+=((screenWidth - screenDiffPos.x)-p2.position.x);
                     }
                     else{
                         p2.position.x+=moveAmount;
                         position.x+=moveAmount;
                     }}
-                else if(p2.position.x>700){
-                    if(p2.position.x-700<moveAmount){
-                        p2.position.x-=(p2.position.x - 700);
-                        position.x-=(p2.position.x - 700);
+                else if(p2.position.x>(screenWidth - screenDiffPos.x)){
+                    if(p2.position.x-(screenWidth - screenDiffPos.x)<moveAmount){
+                        p2.position.x-=(p2.position.x - (screenWidth - screenDiffPos.x));
+                        position.x-=(p2.position.x - (screenWidth - screenDiffPos.x));
                     }
                     else{
                         p2.position.x-=moveAmount;
@@ -192,7 +192,7 @@ class Player{
             if(IsMouseButtonDown(MOUSE_LEFT_BUTTON) && turn){
                 mouseDown = true;
                 Vector2 currMousePos = GetMousePosition();
-                double npower = isLeft?((mousePos.x - currMousePos.x)/200):((currMousePos.x - mousePos.x)/200);
+                double npower = isLeft?((mousePos.x - currMousePos.x)/100):((currMousePos.x - mousePos.x)/100);
                 if(npower<1.0 && npower>=0.0)
                     power = npower;
                 else
@@ -211,8 +211,8 @@ class Player{
         }
 };
 int main () {
-    Player player1({100,500}, 100,50, RED,true,false,true);
-    Player player2({1500,500}, 100,50, BLUE,false,false,false);
+    Player player1({150,screenHeight-150}, 100,50, RED,true,false,true);
+    Player player2({2*screenHeight,screenHeight-150}, 100,50, BLUE,false,false,false);
     camera.offset = {screenWidth/2, screenHeight/2};
     camera.target = {screenWidth/2, screenHeight/2};
     camera.rotation = 0.0f;
