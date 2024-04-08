@@ -4,8 +4,8 @@
 #include <vector>
 
 const double gravity = 9.8;
-const int screenWidth = 800;
-const int screenHeight = 600;
+const int screenWidth = 1800;
+const int screenHeight = 800;
 Camera2D camera;
 
 using namespace std;
@@ -52,8 +52,8 @@ class Player{
         Player(Vector2 pos, int h=100,int r=50, Color col=RED,bool isLeft=true,bool isShooting=false,bool turn=false,int ang=45,double pow=0.6):position(pos),health(h),radius(r),color(col),angle(ang),power(pow),isLeft(isLeft),isShooting(isShooting),turn(turn),Textx((isLeft)? 20 : screenWidth-120),settingUp(false),recentHitTimer(0),mouseDown(false),screenDiffPos({150,150}){
             initial.x = isLeft?screenDiffPos.x:(screenWidth - screenDiffPos.x);
             initial.y = screenHeight - screenDiffPos.y;
-            arrow = Arrow(initial,{70,60},5,45,color,(isLeft)?1:-1);
-            arrowVel = {70,60};
+            arrow = Arrow(initial,{screenDiffPos.x/2+20,screenDiffPos.x/2+10},5,45,color,(isLeft)?1:-1);
+            arrowVel = {screenDiffPos.x/2+20,screenDiffPos.x/2+10};
             mousePos = initial;
         }
         void draw(){
@@ -137,7 +137,7 @@ class Player{
             }
         }
         if(settingUp){
-            float moveAmount = (arrow.velocity.x*cos((angle*PI)/180.0))/2;
+            float moveAmount = (arrow.velocity.x)/2;
             if(p2.isLeft){
                 if(p2.position.x>screenDiffPos.x){
                     if(p2.position.x-screenDiffPos.x<moveAmount){
@@ -212,7 +212,7 @@ class Player{
 };
 int main () {
     Player player1({150,screenHeight-150}, 100,50, RED,true,false,true);
-    Player player2({2*screenHeight,screenHeight-150}, 100,50, BLUE,false,false,false);
+    Player player2({2*screenWidth,screenHeight-150}, 100,50, BLUE,false,false,false);
     camera.offset = {screenWidth/2, screenHeight/2};
     camera.target = {screenWidth/2, screenHeight/2};
     camera.rotation = 0.0f;
