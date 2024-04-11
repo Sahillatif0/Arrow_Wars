@@ -5,8 +5,7 @@
 
 const double gravity = 9.8;
 const int screenWidth = 1800;
-const int screenHeight = 800;
-Camera2D camera;
+const int screenHeight = 920;
 
 using namespace std;
 
@@ -243,15 +242,14 @@ int main () {
     InitWindow(screenWidth, screenHeight, "ARROW WARS!");
     Player player1({150,screenHeight-150}, 100,50, RED,true,false,true);
     Player player2({2*screenWidth,screenHeight-150}, 100,50, BLUE,false,false,false);
+    Texture2D bg = LoadTexture("bg.png");
     GamePlay game(player1, player2);
-    camera.offset = {screenWidth/2, screenHeight/2};
-    camera.target = {screenWidth/2, screenHeight/2};
-    camera.rotation = 0.0f;
-    camera.zoom = 1.0f;
     SetTargetFPS(60);
     while (WindowShouldClose() == false){
+    Rectangle sourceRec = { 0.0f, 0.0f, (float)bg.width, (float)bg.height };
+    Rectangle destRec = { 0.0f, 0.0f, (float)screenWidth,(float)screenHeight};
+    DrawTexturePro(bg, sourceRec, destRec, {0,0}, 0.0f, WHITE);
         BeginDrawing();
-        BeginMode2D(camera);
         ClearBackground(BLACK);
         game.update();
         game.draw();
@@ -262,7 +260,6 @@ int main () {
             else
             DrawText("RED WINS",screenWidth/2-50,screenHeight/2,20,WHITE);
         }
-        EndMode2D();
         EndDrawing();
     }
 
