@@ -211,7 +211,7 @@ class Player{
 };
 int main () {
     InitWindow(screenWidth, screenHeight, "ARROW WARS!");
-    Player player1({150,screenHeight-150}, 100,50, WHITE,true,false,true);
+    Player player1({150,screenHeight-150}, 100,50, RED,true,false,true);
     Player player2({2*screenWidth,screenHeight-150}, 100,50, BLUE,false,false,false);
     Texture2D bg = LoadTexture("bg.png");
     SetTargetFPS(60);
