@@ -209,7 +209,7 @@ class GamePlay{
     Texture Skull;
     public:
         GamePlay(Player p1, Player p2):p1(p1),p2(p2){
-            Skull = LoadTexture("assets/crossarrows_skull1.png");
+            Skull = LoadTexture("assets/crossarrows_skull.png");
         }
         void drawHealthBar(){
             // DrawRectangleRounded()
