@@ -6,7 +6,6 @@
 const double gravity = 9.8;
 const int screenWidth = 1800;
 const int screenHeight = 920;
-Camera2D camera;
 
 using namespace std;
 
@@ -211,23 +210,16 @@ class Player{
         }
 };
 int main () {
+    InitWindow(screenWidth, screenHeight, "ARROW WARS!");
     Player player1({150,screenHeight-150}, 100,50, WHITE,true,false,true);
     Player player2({2*screenWidth,screenHeight-150}, 100,50, BLUE,false,false,false);
-    // camera.offset = {screenWidth/2, screenHeight/2};
-    // camera.target = {screenWidth/2, screenHeight/2};
-    // camera.rotation = 0.0f;
-    // camera.zoom = 1.0f;
-    InitWindow(screenWidth, screenHeight, "ARROW WARS!");
     Texture2D bg = LoadTexture("bg.png");
     SetTargetFPS(60);
     while (WindowShouldClose() == false){
-        // Define the source rectangle (the entire texture)
     Rectangle sourceRec = { 0.0f, 0.0f, (float)bg.width, (float)bg.height };
-    Rectangle destRec = { 0.0f, 0.0f, (float)screenWidth,(float)screenHeight}; // 2.0f is the scale factor
-    Vector2 origin = { 0.0f, 0.0f };
-    DrawTexturePro(bg, sourceRec, destRec, origin, 0.0f, WHITE);
+    Rectangle destRec = { 0.0f, 0.0f, (float)screenWidth,(float)screenHeight};
+    DrawTexturePro(bg, sourceRec, destRec, {0,0}, 0.0f, WHITE);
         BeginDrawing();
-        // BeginMode2D(camera);
         ClearBackground(BLACK);
         player1.draw();
         player2.draw();
@@ -242,7 +234,6 @@ int main () {
             else
             DrawText("RED WINS",screenWidth/2-50,screenHeight/2,20,WHITE);
         }
-        // EndMode2D();
         EndDrawing();
     }
 
