@@ -44,9 +44,9 @@ class PlayerKeys{
 class Player{
     public:
         Vector2 position,initial,arrowVel, mousePos, screenDiffPos;
-        int health,health2,radius,angle,Textx,recentHitTimer;
+        int health,radius,angle,Textx,recentHitTimer;
         Color color;
-        double power;
+        double power,health2;
         Arrow arrow;
         bool isLeft, isShooting, turn, settingUp, mouseDown;
         friend class GamePlay;
@@ -73,14 +73,6 @@ class Player{
             int x = Textx;
             string angle_str = "Angle: " + to_string(angle);
             string pow_str = "Power: "+to_string(int(power*100));
-            if(recentHitTimer>0){
-                Color color2 = recentHitTimer%3==0?RED:BLUE;
-                DrawRectangle(x, 20, health, 20, color2);
-                recentHitTimer--;
-            }
-            else
-                DrawRectangle(x, 20, health, 20, color);
-            DrawRectangleLines(x-2, 18, 102, 22, WHITE);
             DrawText(angle_str.c_str(), x, 50, 20, WHITE);
             DrawText(pow_str.c_str(), x, 80, 20, WHITE);
         }
@@ -103,8 +95,6 @@ class Player{
                 else
                     DrawTriangle(Vector2{x, y+20}, Vector2{x - 10, y + 30}, Vector2{x, y + 40}, p2.color);
             }
-            if(p2.recentHitTimer>0 && p2.health>0)
-                p2.health -= 2;
             if(isShooting){
             arrow.time += 1.0/60.0;
             arrow.angle = angle;
@@ -118,7 +108,8 @@ class Player{
                 turn = false;
                 p2.turn = true;
                 settingUp = true;
-                p2.recentHitTimer = 15;
+                recentHitTimer = 100;
+                p2.health-=10;
             }
             if(p2.health<0 && p2.radius>0){
                 p2.health = 0;
@@ -190,6 +181,9 @@ class Player{
         }
         }
         void update(){
+            if (health2>health){
+                    health2-=0.1;
+            }
             if(IsMouseButtonDown(MOUSE_LEFT_BUTTON) && turn){
                 mouseDown = true;
                 Vector2 currMousePos = GetMousePosition();
@@ -216,15 +210,21 @@ class GamePlay{
     Texture Skull;
     public:
         GamePlay(Player p1, Player p2):p1(p1),p2(p2){
-            Skull = LoadTexture("assets/crossarrows_skull.png");
+            Skull = LoadTexture("assets/crossarrows_skull1.png");
         }
         void drawHealthBar(){
             // DrawRectangleRounded()
-            float healthWidthFactor = (screenWidth/2 - 10*6)/200;
-            DrawRectangleRounded({(screenWidth/4),40,screenWidth/2,screenHeight/10},4,5,WHITE);
-            DrawRectangleRounded({(screenWidth/4)+10,50,float (p1.health)*healthWidthFactor,screenHeight/10 - 20},4,5,p1.color);
-            DrawRectangleRounded({float((0.75*screenWidth) - 10 - (p2.health)*healthWidthFactor),50,float (p2.health)*healthWidthFactor,screenHeight/10 - 20},4,5,p2.color);
-            DrawTexture(Skull, (screenWidth/2)-Skull.width/2, 50, WHITE);
+            float healthWidthFactor = (screenWidth/2 - (10*12))/200.0, rounded=1.0;
+            DrawRectangleRounded({(screenWidth/4),40,screenWidth/2,screenHeight/10},2,5,Color({83,28,105,255}));
+            DrawRectangleRounded({(screenWidth/4)+10,50,healthWidthFactor*100,screenHeight/10 - 20},rounded,5,Color({45,18,60,150}));
+            DrawRectangleRounded({float((0.75*screenWidth) - 10 - healthWidthFactor*100),50,healthWidthFactor*100,screenHeight/10 - 20},rounded,5,Color({45,18,60,150}));
+            DrawRectangleRounded({(screenWidth/4)+10,50,float (p1.health2)*healthWidthFactor,screenHeight/10 - 20},rounded,5,Fade(p1.color,0.5));
+            DrawRectangleRounded({float((0.75*screenWidth) - 10 - (p2.health2)*healthWidthFactor),50,float (p2.health2)*healthWidthFactor,screenHeight/10 - 20},rounded,5,Fade(p2.color,0.5));
+            DrawRectangleRounded({(screenWidth/4)+10,50,float (p1.health)*healthWidthFactor,screenHeight/10 - 20},rounded,5,p1.color);
+            DrawRectangleRounded({float((0.75*screenWidth) - 10 - (p2.health)*healthWidthFactor),50,float (p2.health)*healthWidthFactor,screenHeight/10 - 20},rounded,5,p2.color);
+            Rectangle sourceRec = {0.0f, 0.0f, (float)Skull.width, (float)Skull.height };
+            Rectangle destRec = { float((screenWidth/2)-Skull.width*0.125), 30.0f, Skull.width*0.25f,Skull.height*0.25f};
+            DrawTexturePro(Skull, sourceRec, destRec, {0, 0}, 0.0f, WHITE);
         }
         void update(){
             p1.update();
