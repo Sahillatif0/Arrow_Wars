@@ -44,12 +44,13 @@ class PlayerKeys{
 class Player{
     public:
         Vector2 position,initial,arrowVel, mousePos, screenDiffPos;
-        int health,radius,angle,Textx,recentHitTimer;
+        int health,health2,radius,angle,Textx,recentHitTimer;
         Color color;
         double power;
         Arrow arrow;
         bool isLeft, isShooting, turn, settingUp, mouseDown;
-        Player(Vector2 pos, int h=100,int r=50, Color col=RED,bool isLeft=true,bool isShooting=false,bool turn=false,int ang=45,double pow=0.6):position(pos),health(h),radius(r),color(col),angle(ang),power(pow),isLeft(isLeft),isShooting(isShooting),turn(turn),Textx((isLeft)? 20 : screenWidth-120),settingUp(false),recentHitTimer(0),mouseDown(false),screenDiffPos({150,150}){
+        friend class GamePlay;
+        Player(Vector2 pos, int h=100,int r=50, Color col=RED,bool isLeft=true,bool isShooting=false,bool turn=false,int ang=45,double pow=0.6):position(pos),health(h),health2(h),radius(r),color(col),angle(ang),power(pow),isLeft(isLeft),isShooting(isShooting),turn(turn),Textx((isLeft)? 20 : screenWidth-120),settingUp(false),recentHitTimer(0),mouseDown(false),screenDiffPos({150,150}){
             initial.x = isLeft?screenDiffPos.x:(screenWidth - screenDiffPos.x);
             initial.y = screenHeight - screenDiffPos.y;
             arrow = Arrow(initial,{screenDiffPos.x/2+20,screenDiffPos.x/2+10},5,45,color,(isLeft)?1:-1);
@@ -210,25 +211,50 @@ class Player{
             }
         }
 };
+class GamePlay{
+    Player p1, p2;
+    Texture Skull;
+    public:
+        GamePlay(Player p1, Player p2):p1(p1),p2(p2){
+            Skull = LoadTexture("assets/crossarrows_skull.png");
+        }
+        void drawHealthBar(){
+            // DrawRectangleRounded()
+            float healthWidthFactor = (screenWidth/2 - 10*6)/200;
+            DrawRectangleRounded({(screenWidth/4),40,screenWidth/2,screenHeight/10},4,5,WHITE);
+            DrawRectangleRounded({(screenWidth/4)+10,50,float (p1.health)*healthWidthFactor,screenHeight/10 - 20},4,5,p1.color);
+            DrawRectangleRounded({float((0.75*screenWidth) - 10 - (p2.health)*healthWidthFactor),50,float (p2.health)*healthWidthFactor,screenHeight/10 - 20},4,5,p2.color);
+            DrawTexture(Skull, (screenWidth/2)-Skull.width/2, 50, WHITE);
+        }
+        void update(){
+            p1.update();
+            p2.update();
+            p1.updateArrow(p2);
+            p2.updateArrow(p1);
+        }
+        void draw(){
+            drawHealthBar();
+            p1.draw();
+            p2.draw();
+        }
+        
+};
 int main () {
+    InitWindow(screenWidth, screenHeight, "ARROW WARS!");
     Player player1({150,screenHeight-150}, 100,50, RED,true,false,true);
     Player player2({2*screenWidth,screenHeight-150}, 100,50, BLUE,false,false,false);
+    GamePlay game(player1, player2);
     camera.offset = {screenWidth/2, screenHeight/2};
     camera.target = {screenWidth/2, screenHeight/2};
     camera.rotation = 0.0f;
     camera.zoom = 1.0f;
-    InitWindow(screenWidth, screenHeight, "ARROW WARS!");
     SetTargetFPS(60);
     while (WindowShouldClose() == false){
         BeginDrawing();
         BeginMode2D(camera);
         ClearBackground(BLACK);
-        player1.draw();
-        player2.draw();
-        player1.update();
-        player2.update();
-        player1.updateArrow(player2);
-        player2.updateArrow(player1);
+        game.update();
+        game.draw();
         if(player1.health==0 || player2.health==0){
             ClearBackground(GRAY);
             if(player1.health==0)
