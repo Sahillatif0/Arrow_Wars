@@ -16,13 +16,22 @@ bool circleCollision(Vector2 pos1, Vector2 pos2, int rad1, int rad2){
 class Arrow{
     Vector2 position, velocity, initialVel;
     Color color;
+    Texture ball;
     double time;
     int moveDir, radius, angle;
     public:
         friend class Player;
-        Arrow(Vector2 pos= {0,0}, Vector2 vel={0,0},int rad=5, int ang=45, Color col=RED, int moveDir=1):position(pos),velocity(vel),radius(rad), angle(ang),color(col),time(0),moveDir(moveDir),initialVel(velocity){}
+        Arrow(Vector2 pos= {0,0}, Vector2 vel={0,0},int rad=5, int ang=45, Color col=RED, int moveDir=1):position(pos),velocity(vel),radius(rad), angle(ang),color(col),time(0),moveDir(moveDir),initialVel(velocity){
+            ball = LoadTexture("assets/ball.png");
+        }
+        void update(float x, float y){
+            position.x = x;
+            position.y = y;
+        }
         void draw(){
-            DrawCircle(position.x, position.y, radius, color);
+
+            // DrawCircle(position.x, position.y, radius, color);
+            DrawTexturePro(ball, {0,0,float (ball.width),float(ball.height)}, {position.x, position.y, ball.width*0.1f, ball.height*0.1f}, {0,0}, angle, WHITE);
         }
         void move(int x){
             if(((position.x < screenWidth/2 || (x>(screenWidth - 150) && x<((screenWidth - 150)+initialVel.x))) && moveDir==1) || ((position.x > screenWidth/2 || (x<150&&x>(150-initialVel.x))) && moveDir==-1))
@@ -48,6 +57,7 @@ class Player{
         double power,health2;
         Arrow arrow;
         bool isLeft, isShooting, turn, settingUp, mouseDown;
+        Texture sprite;
         friend class GamePlay;
         Player(Vector2 pos, int h=100,int r=50, Color col=RED,bool isLeft=true,bool isShooting=false,bool turn=false,int ang=45,double pow=0.6):position(pos),health(h),health2(h),radius(r),color(col),angle(ang),power(pow),isLeft(isLeft),isShooting(isShooting),turn(turn),Textx((isLeft)? 20 : screenWidth-120),settingUp(false),recentHitTimer(0),mouseDown(false),screenDiffPos({150,150}){
             initial.x = isLeft?screenDiffPos.x:(screenWidth - screenDiffPos.x);
@@ -55,10 +65,14 @@ class Player{
             arrow = Arrow(initial,{screenDiffPos.x/2+20,screenDiffPos.x/2+10},5,45,color,(isLeft)?1:-1);
             arrowVel = {screenDiffPos.x/2+20,screenDiffPos.x/2+10};
             mousePos = initial;
+            sprite = isLeft?LoadTexture("assets/sprites.png"):LoadTexture("assets/Bluesprites2.png");
         }
         void draw(){
-            DrawCircle(position.x, position.y, radius, color);
-            float x=position.x,y=position.y;
+            // DrawCircle(position.x, position.y, radius, color);
+            Rectangle sourceRec = {float ((sprite.width/31)*((isLeft?0:31)-int (angle/3))), float (sprite.height), sprite.width/31, sprite.height };
+            Rectangle destRec = { isLeft?position.x:position.x-sprite.width/31, position.y-300, sprite.width/31,sprite.height};
+            DrawTexturePro(sprite, sourceRec, destRec, {0,0}, 0.0f, WHITE);
+            float x=position.x,y=position.y-sprite.height/2-30;
             int sign = isLeft?1:-1;
             if(mouseDown && turn)
                 for(int i=10;i>=0;i--){
@@ -79,6 +93,7 @@ class Player{
             if(turn){
                 arrow.velocity.x *= power;
                 arrow.velocity.y *= power;
+                arrow.update(position.x,position.y-sprite.height/2-30);
                 arrow.draw();
                 isShooting = true;
             }
@@ -183,6 +198,8 @@ class Player{
             if (health2>health){
                     health2-=0.1;
             }
+            if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && turn)
+                mousePos = GetMousePosition();
             if(IsMouseButtonDown(MOUSE_LEFT_BUTTON) && turn){
                 mouseDown = true;
                 Vector2 currMousePos = GetMousePosition();
@@ -192,7 +209,7 @@ class Player{
                 else
                     power = 1.0;
                 int nangle = (currMousePos.y - mousePos.y)/2;
-                if(nangle<90)
+                if(nangle<90 && nangle>=0)
                     angle = nangle;
                 else
                     angle = 90;
@@ -209,7 +226,7 @@ class GamePlay{
     Texture Skull;
     public:
         GamePlay(Player p1, Player p2):p1(p1),p2(p2){
-            Skull = LoadTexture("assets/crossarrows_skull1.png");
+            Skull = LoadTexture("assets/crossarrows_skull.png");
         }
         void drawHealthBar(){
             // DrawRectangleRounded()
@@ -248,7 +265,7 @@ int main () {
     while (WindowShouldClose() == false){
     Rectangle sourceRec = { 0.0f, 0.0f, (float)bg.width, (float)bg.height };
     Rectangle destRec = { 0.0f, 0.0f, (float)screenWidth,(float)screenHeight};
-    DrawTexturePro(bg, sourceRec, destRec, {0,0}, 0.0f, WHITE);
+    // DrawTexturePro(bg, sourceRec, destRec, {0,0}, 0.0f, WHITE);
         BeginDrawing();
         ClearBackground(BLACK);
         game.update();
