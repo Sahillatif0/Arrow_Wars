@@ -43,8 +43,15 @@ public:
     {
         if (((position.x < screenWidth / 2 || (x > (screenWidth - 150) && x < ((screenWidth - 150) + initialVel.x))) && moveDir == 1) || ((position.x > screenWidth / 2 || (x < 150 && x > (150 - initialVel.x))) && moveDir == -1))
             position.x += moveDir * (velocity.x * cos((angle * PI) / 180.0));
-        position.y -= (velocity.y * sin((angle * PI) / 180.0) - 0.5 * gravity * time * time);
-        velocity.y -= gravity * time;
+        if (angle >= 0)
+        {
+            position.y -= (velocity.y * sin((angle * PI) / 180.0) - 0.5 * gravity * time * time);
+            velocity.y -= gravity * time;
+        }
+        else
+        {
+            position.y -= velocity.y * sin((angle * PI) / 180.0) * time;
+        }
     }
     void reset()
     {
