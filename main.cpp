@@ -96,18 +96,9 @@ public:
         if (mouseDown && turn)
             for (int i = 10; i >= 0; i--)
             {
-                // if (angle >= 0)
-                // {5
                 y -= (arrowVel.y * power * sin((angle * PI) / 180.0) - 0.5 * gravity * ((10 - i) * 0.000001) * ((10 - i) * 0.000001));
                 x += sign * ((arrowVel.x * power) * cos((angle * PI) / 180.0));
                 DrawCircle(x, y, (7 - float(i / 2)), Fade(color, power * 0.1 * i));
-                // }
-                // else
-                // {
-                //     y -= arrowVel.y * sin((angle * PI) / 180.0) * ((10 - i) * 0.000001) * ((10 - i) * 0.000001);
-                //     x += sign * ((arrowVel.x * power) * cos((angle * PI) / 180.0));
-                //     DrawCircle(x, y, (7 - float(i / 2)), Fade(color, power * 0.1 * i));
-                // }
             }
         drawText();
     }
@@ -355,9 +346,6 @@ public:
     }
     void draw()
     {
-        // Texture2D bg = LoadTexture("bg.png");
-        // Rectangle bgRect = {p1.position.x - (screenWidth / 2), p1.position.y - (screenHeight / 2), (float)screenWidth, (float)screenHeight};
-        // DrawTexturePro(bg, {0, 0}, {0, 0}, {0, 0}, 0.0f, YELLOW);
         drawHealthBar();
         p1.draw();
         p2.draw();
