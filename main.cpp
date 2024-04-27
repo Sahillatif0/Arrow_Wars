@@ -149,7 +149,7 @@ public:
             arrow.draw();
             arrow.move(p2.position.x);
             arrow.velocity.x = arrow.initialVel.x * power;
-            if (circleCollision(arrow.position, p2.position, arrow.radius, p2.radius) && ((arrow.moveDir != 1 && p2.isLeft) || (arrow.moveDir == 1 && !p2.isLeft)))
+            if (circleCollision(arrow.position, p2.position, arrow.radius, 300) && ((arrow.moveDir != 1 && p2.isLeft) || (arrow.moveDir == 1 && !p2.isLeft)))
             {
                 arrow.reset();
                 arrow.position = initial;
@@ -158,7 +158,7 @@ public:
                 p2.turn = true;
                 settingUp = true;
                 recentHitTimer = 100;
-                p2.health -= 10;
+                p2.health -= 30;
             }
             if (p2.health < 0 && p2.radius > 0)
             {
