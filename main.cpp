@@ -107,8 +107,16 @@ public:
         int x = Textx;
         string angle_str = "Angle: " + to_string(angle);
         string pow_str = "Power: " + to_string(int(power * 100));
-        DrawText(angle_str.c_str(), x, 50, 20, WHITE);
-        DrawText(pow_str.c_str(), x, 80, 20, WHITE);
+        if (isLeft)
+        {
+            DrawText(angle_str.c_str(), position.x + 130, position.y - 350, 20, WHITE);
+            DrawText(pow_str.c_str(), position.x + 130, position.y - 320, 20, WHITE);
+        }
+        else
+        {
+            DrawText(angle_str.c_str(), position.x - 190, position.y - 350, 20, WHITE);
+            DrawText(pow_str.c_str(), position.x - 190, position.y - 320, 20, WHITE);
+        }
     }
     void shoot()
     {
