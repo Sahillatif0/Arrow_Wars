@@ -263,16 +263,14 @@ public:
         {
             mouseDown = true;
             Vector2 currMousePos = GetMousePosition();
-            double npower = isLeft ? ((mousePos.x - currMousePos.x) / 100) : ((currMousePos.x - mousePos.x) / 100);
+            double npower = isLeft ? ((mousePos.x - currMousePos.x) / 300) : ((currMousePos.x - mousePos.x) / 300);
             if (npower < 1.0 && npower >= 0.0)
                 power = npower;
             else
                 power = 1.0;
             int nangle = (currMousePos.y - mousePos.y) / 2;
-            if (nangle < 90 && nangle >= 0)
+            if (nangle < 90 && nangle >= -45)
                 angle = nangle;
-            else
-                angle = 90;
         }
         if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && turn)
         {
