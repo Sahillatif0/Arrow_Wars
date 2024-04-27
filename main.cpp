@@ -286,6 +286,7 @@ class GamePlay
     Texture Skull;
 
 public:
+    static int round;
     GamePlay(Player p1, Player p2) : p1(p1), p2(p2)
     {
         Skull = LoadTexture("assets/crossarrows_skull.png");
@@ -294,9 +295,9 @@ public:
     {
         // DrawRectangleRounded()
         float healthWidthFactor = (screenWidth / 2 - (10 * 12)) / 200.0, rounded = 1.0;
-        DrawRectangleRounded({(screenWidth / 4), 40, screenWidth / 2, screenHeight / 10}, 2, 5, Color({83, 28, 105, 255}));
-        DrawRectangleRounded({(screenWidth / 4) + 10, 50, healthWidthFactor * 100, screenHeight / 10 - 20}, rounded, 5, Color({45, 18, 60, 150}));
-        DrawRectangleRounded({float((0.75 * screenWidth) - 10 - healthWidthFactor * 100), 50, healthWidthFactor * 100, screenHeight / 10 - 20}, rounded, 5, Color({45, 18, 60, 150}));
+        DrawRectangleRounded({(screenWidth / 4), 40, screenWidth / 2, screenHeight / 10}, 2, 5, Color({44, 0, 81, 255}));
+        DrawRectangleRounded({(screenWidth / 4) + 10, 50, healthWidthFactor * 100, screenHeight / 10 - 20}, rounded, 5, Color(BLACK));
+        DrawRectangleRounded({float((0.75 * screenWidth) - 10 - healthWidthFactor * 100), 50, healthWidthFactor * 100, screenHeight / 10 - 20}, rounded, 5, Color(BLACK));
         DrawRectangleRounded({(screenWidth / 4) + 10, 50, float(p1.health2) * healthWidthFactor, screenHeight / 10 - 20}, rounded, 5, Fade(p1.color, 0.5));
         DrawRectangleRounded({float((0.75 * screenWidth) - 10 - (p2.health2) * healthWidthFactor), 50, float(p2.health2) * healthWidthFactor, screenHeight / 10 - 20}, rounded, 5, Fade(p2.color, 0.5));
         DrawRectangleRounded({(screenWidth / 4) + 10, 50, float(p1.health) * healthWidthFactor, screenHeight / 10 - 20}, rounded, 5, p1.color);
@@ -304,6 +305,37 @@ public:
         Rectangle sourceRec = {0.0f, 0.0f, (float)Skull.width, (float)Skull.height};
         Rectangle destRec = {float((screenWidth / 2) - Skull.width * 0.125), 30.0f, Skull.width * 0.25f, Skull.height * 0.25f};
         DrawTexturePro(Skull, sourceRec, destRec, {0, 0}, 0.0f, WHITE);
+        if (p1.health == 0 || p2.health == 0 || p1.health2 == 0 || p2.health2 == 0)
+        {
+            if (p1.health == 0 || p1.health2 == 0)
+            {
+                DrawText("BLUE WINS", screenWidth / 2 - 250, screenHeight / 2 - 30, 100, WHITE);
+                DrawText("Press Space To Continue", screenWidth / 2 - 320, screenHeight / 2 + 100, 50, WHITE);
+                if (IsKeyDown(KEY_SPACE))
+                {
+                    ClearBackground(BLACK);
+                    p1.health = 100;
+                    p1.health2 = 100;
+                    p2.health = 100;
+                    p2.health2 = 100;
+                    round++;
+                }
+            }
+            else
+            {
+                DrawText("RED WINS", screenWidth / 2 - 250, screenHeight / 2 - 30, 100, WHITE);
+                DrawText("Press Space To Continue", screenWidth / 2 - 320, screenHeight / 2 + 100, 50, WHITE);
+                if (IsKeyDown(KEY_SPACE))
+                {
+                    ClearBackground(BLACK);
+                    p1.health = 100;
+                    p1.health2 = 100;
+                    p2.health = 100;
+                    p2.health2 = 100;
+                    round++;
+                }
+            }
+        }
     }
     void update()
     {
@@ -319,6 +351,7 @@ public:
         p2.draw();
     }
 };
+int GamePlay::round = 1;
 int main()
 {
     InitWindow(screenWidth, screenHeight, "ARROW WARS!");
