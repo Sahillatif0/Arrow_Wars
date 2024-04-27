@@ -354,29 +354,22 @@ public:
 int GamePlay::round = 1;
 int main()
 {
-    InitWindow(screenWidth, screenHeight, "ARROW WARS!");
-    Player player1({150, screenHeight - 150}, 100, 50, RED, true, false, true);
-    Player player2({2 * screenWidth, screenHeight - 150}, 100, 50, BLUE, false, false, false);
-    Texture2D bg = LoadTexture("bg.png");
+    InitWindow(screenWidth, screenHeight, "ARROW WARS");
+    Player player1({150, screenHeight - 150}, 100, 50, {224, 16, 0, 255}, true, false, true);
+    Player player2({2 * screenWidth, screenHeight - 150}, 100, 50, {0, 234, 255, 255}, false, false, false);
+    // Texture2D bg = LoadTexture("bg.png");
     GamePlay game(player1, player2);
     SetTargetFPS(60);
     while (WindowShouldClose() == false)
     {
-        Rectangle sourceRec = {0.0f, 0.0f, (float)bg.width, (float)bg.height};
-        Rectangle destRec = {0.0f, 0.0f, (float)screenWidth, (float)screenHeight};
-        // DrawTexturePro(bg, sourceRec, destRec, {0,0}, 0.0f, WHITE);
+        // Rectangle sourceRec = {0.0f, 0.0f, (float)bg.width, (float)bg.height};
+        // Rectangle destRec = {0.0f, 0.0f, (float)screenWidth, (float)screenHeight};
+        // DrawTexturePro(bg, sourceRec, destRec, {0, 0}, 0.0f, WHITE);
         BeginDrawing();
+        DrawText(TextFormat("Round %i", GamePlay::round), screenWidth / 2 - 85, screenHeight / 2 - 300, 50, WHITE);
         ClearBackground(BLACK);
         game.update();
         game.draw();
-        if (player1.health == 0 || player2.health == 0)
-        {
-            ClearBackground(GRAY);
-            if (player1.health == 0)
-                DrawText("BLUE WINS", screenWidth / 2 - 50, screenHeight / 2, 20, WHITE);
-            else
-                DrawText("RED WINS", screenWidth / 2 - 50, screenHeight / 2, 20, WHITE);
-        }
         EndDrawing();
     }
 
