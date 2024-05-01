@@ -246,10 +246,8 @@ public:
         Rectangle sourceRec = {0.0f, 0.0f, (float)Skull.width, (float)Skull.height};
         Rectangle destRec = {float((screenWidth / 2) - Skull.width * 0.125), 30.0f, Skull.width * 0.25f, Skull.height * 0.25f};
         DrawTexturePro(Skull, sourceRec, destRec, {0, 0}, 0.0f, WHITE);
-        if (p1.health == 0 || p2.health == 0 || p1.health2 == 0 || p2.health2 == 0)
-        {
-            if (p1.health == 0 || p1.health2 == 0)
-            {
+        if (p1.health == 0 || p2.health == 0 || p1.health2 == 0 || p2.health2 == 0){
+            if (p1.health == 0 || p1.health2 == 0){
                 DrawText("BLUE WINS", screenWidth / 2 - 250, screenHeight / 2 - 30, 100, WHITE);
                 DrawText("Press Space To Continue", screenWidth / 2 - 320, screenHeight / 2 + 100, 50, WHITE);
                 if (IsKeyDown(KEY_SPACE))
@@ -262,8 +260,7 @@ public:
                     round++;
                 }
             }
-            else
-            {
+            else{
                 DrawText("RED WINS", screenWidth / 2 - 250, screenHeight / 2 - 30, 100, WHITE);
                 DrawText("Press Space To Continue", screenWidth / 2 - 320, screenHeight / 2 + 100, 50, WHITE);
                 if (IsKeyDown(KEY_SPACE))
@@ -291,16 +288,14 @@ public:
     }
 };
 int GamePlay::round = 1;
-int main()
-{
+int main(){
     InitWindow(screenWidth, screenHeight, "ARROW WARS!");
     Player player1({150, screenHeight - 150}, 100, 50, {224, 16, 0, 255}, true, false, true);
     Player player2({2 * screenWidth, screenHeight - 150}, 100, 50, {0, 234, 255, 255}, false, false, false);
     // Texture2D bg = LoadTexture("bg.png");
     GamePlay game(player1, player2);
     SetTargetFPS(60);
-    while (WindowShouldClose() == false)
-    {
+    while (WindowShouldClose() == false){
         // Rectangle sourceRec = {0.0f, 0.0f, (float)bg.width, (float)bg.height};
         // Rectangle destRec = {0.0f, 0.0f, (float)screenWidth, (float)screenHeight};
         // DrawTexturePro(bg, sourceRec, destRec, {0,0}, 0.0f, WHITE);
