@@ -225,13 +225,40 @@ class Player{
             }
         }
 };
+class Box{
+    Vector2 position;
+    Texture boxmain;
+    int height;
+    public:
+    Box(int height=300):height(height){
+        boxmain = LoadTexture("assets/box.png");
+    }
+    void draw(Player p1, Player p2){
+        DrawTexturePro(boxmain, {0, 0, float(boxmain.width), float(boxmain.height)}, {(p2.position.x+p1.position.x)/2, height, boxmain.width * 0.8f, boxmain.height * 0.8f}, {0, 0}, 0, WHITE);
+    }
+    // void update(){
+    //     if (circleCollision(arrow.position, p2.position, arrow.radius, 300) && ((arrow.moveDir != 1 && p2.isLeft) || (arrow.moveDir == 1 && !p2.isLeft))){
+    //                 arrow.reset();
+    //                 arrow.position = initial;
+    //                 isShooting = false;
+    //                 turn = false;
+    //                 p2.turn = true;
+    //                 settingUp = true;
+    //                 recentHitTimer = 100;
+    //             }
+    // }
+};
 class GamePlay{
     Player p1, p2;
     Texture Skull;
+    Box box1;
+    Box box2;
 
 public:
     static int round;
     GamePlay(Player p1, Player p2) : p1(p1), p2(p2){
+        box1 = Box(300);
+        box2 = Box(50);
         Skull = LoadTexture("assets/crossarrows_skull.png");
     }
     void drawHealthBar(){
@@ -276,6 +303,7 @@ public:
         }
     }
     void update(){
+        // CheckCollisionRecs(p2.arrow.position,box1.position);
         p1.update();
         p2.update();
         p1.updateArrow(p2);
@@ -285,6 +313,8 @@ public:
         drawHealthBar();
         p1.draw();
         p2.draw();
+        box1.draw(p1,p2);
+        box2.draw(p1,p2);
     }
 };
 int GamePlay::round = 1;
