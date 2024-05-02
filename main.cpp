@@ -56,14 +56,14 @@ class PlayerKeys{
 class Player{
     public:
         Vector2 position, initial, arrowVel, mousePos, screenDiffPos;
-        int health, radius, angle, Textx, recentHitTimer;
+        int health, angle;
         Color color;
         double power, health2;
         Arrow arrow;
         bool isLeft, isShooting, turn, settingUp, mouseDown;
         Texture sprite;
         friend class GamePlay;
-        Player(Vector2 pos, int h = 100, int r = 50, Color col = RED, bool isLeft = true, bool isShooting = false, bool turn = false, int ang = 45, double pow = 0.6) : position(pos), health(h), health2(h), radius(r), color(col), angle(ang), power(pow), isLeft(isLeft), isShooting(isShooting), turn(turn), Textx((isLeft) ? 20 : screenWidth - 120), settingUp(false), recentHitTimer(0), mouseDown(false), screenDiffPos({150, 150}){
+        Player(Vector2 pos, int h = 100, Color col = RED, bool isLeft = true, bool turn = false, int ang = 45, double pow = 0.6) : position(pos), health(h), health2(h), color(col), angle(ang), power(pow), isLeft(isLeft), isShooting(false), turn(turn), settingUp(false), mouseDown(false), screenDiffPos({150, 150}){
             initial.x = isLeft ? screenDiffPos.x : (screenWidth - screenDiffPos.x);
             initial.y = screenHeight - screenDiffPos.y;
             arrow = Arrow(initial, {screenDiffPos.x / 2 + 20, screenDiffPos.x / 2 + 10}, 5, 45, color, (isLeft) ? 1 : -1);
@@ -78,8 +78,7 @@ class Player{
             float x = position.x, y = position.y - sprite.height / 2 - 30;
             int sign = isLeft ? 1 : -1;
             if (mouseDown && turn)
-                for (int i = 10; i >= 0; i--)
-                {
+                for (int i = 10; i >= 0; i--){
                     y -= (arrowVel.y * power * sin((angle * PI) / 180.0) - 0.5 * gravity * ((10 - i) * 0.000001) * ((10 - i) * 0.000001));
                     x += sign * ((arrowVel.x * power) * cos((angle * PI) / 180.0));
                     DrawCircle(x, y, (7 - float(i / 2)), Fade(color, power * 0.1 * i));
@@ -89,14 +88,8 @@ class Player{
         void drawText(){
             string angle_str = "Angle: " + to_string(angle);
             string pow_str = "Power: " + to_string(int(power * 100));
-            if (isLeft){
-            DrawText(angle_str.c_str(), position.x + 130, position.y - 350, 20, WHITE);
-            DrawText(pow_str.c_str(), position.x + 130, position.y - 320, 20, WHITE);
-            }
-        else{
-            DrawText(angle_str.c_str(), position.x - 190, position.y - 350, 20, WHITE);
-            DrawText(pow_str.c_str(), position.x - 190, position.y - 320, 20, WHITE);
-            }
+            DrawText(angle_str.c_str(), position.x + isLeft? 130:(-190), position.y - 350, 20, WHITE);
+            DrawText(pow_str.c_str(), position.x + isLeft? 130:(-190), position.y - 320, 20, WHITE);
         }
         void shoot(){
             if (turn){
@@ -131,7 +124,6 @@ class Player{
                     turn = false;
                     p2.turn = true;
                     settingUp = true;
-                    recentHitTimer = 100;
                     p2.health -= 30;
                 }
                 if(p2.health<0)
@@ -290,8 +282,8 @@ public:
 int GamePlay::round = 1;
 int main(){
     InitWindow(screenWidth, screenHeight, "ARROW WARS!");
-    Player player1({150, screenHeight - 150}, 100, 50, {224, 16, 0, 255}, true, false, true);
-    Player player2({2 * screenWidth, screenHeight - 150}, 100, 50, {0, 234, 255, 255}, false, false, false);
+    Player player1({150, screenHeight - 150}, 100,{224, 16, 0, 255}, true, true);
+    Player player2({2 * screenWidth, screenHeight - 150}, 100, {0, 234, 255, 255}, false, false);
     // Texture2D bg = LoadTexture("bg.png");
     GamePlay game(player1, player2);
     SetTargetFPS(60);
