@@ -35,7 +35,7 @@ class Arrow{
     }
     void move(int x){
         if (((position.x < screenWidth / 2 || (x > (screenWidth - 150) && x < ((screenWidth - 150) + initialVel.x))) && moveDir == 1) || ((position.x > screenWidth / 2 || (x < 150 && x > (150 - initialVel.x))) && moveDir == -1))
-            cout<<"posX: "<<position.x<<" posy: "<<position.y<<" t: "<<time<<endl;
+            // cout<<"posX: "<<position.x<<" posy: "<<position.y<<" t: "<<time<<endl;
             position.x += moveDir * (velocity*power* 0.5* cos((angle * PI) / 180.0));
             position.y -= (velocity* power * sin((angle * PI) / 180.0) - 0.5 * gravity * time * time);
     }
@@ -77,7 +77,7 @@ class Player{
                 for (int i = 30; i > 0; i--){
                     DrawCircle(x, y, (5 - 5*float(i / 30)), Fade(color, power * 0.03 * i + 0.25));
                     time += 1/20.0;
-                    cout<<"y: "<<y<<" x:"<<x<<" TIME: "<<time<<endl;
+                    // cout<<"y: "<<y<<" x:"<<x<<" TIME: "<<time<<endl;
                     y -= (velocity* power * sin((angle * PI) / 180.0) - 0.5 * gravity * time * time);
                     x += sign * 0.5* (velocity*power * cos((angle * PI) / 180.0));
                 }
@@ -286,13 +286,18 @@ class AutoPlayer: public Player{
 class Box{
     Vector2 position;
     Texture boxmain;
-    int height;
+    double height, width;
+    float scale, screenHeightDiff;
+    int boxNo;
     public:
-    Box(int height=300):height(height){
+    Box(float diff, int n=1):screenHeightDiff(diff),boxNo(n),scale(0.8){
         boxmain = LoadTexture("assets/box.png");
+        width = 306*scale, height = 296*scale;
+        position.y = float(screenHeight-(0.7)*screenHeightDiff-((boxmain.height*scale)/2+height/2)-((height+5)*(boxNo-1)));
     }
     void draw(Player p1, Player p2){
-        DrawTexturePro(boxmain, {0, 0, float(boxmain.width), float(boxmain.height)}, {(p2.position.x+p1.position.x)/2, height, boxmain.width * 0.8f, boxmain.height * 0.8f}, {0, 0}, 0, WHITE);
+        position.x = (p2.position.x-p1.position.x)/2 + p1.position.x - (boxmain.width*scale)/2;
+        DrawTexturePro(boxmain, {0, 0, float(boxmain.width), float(boxmain.height)}, {float(position.x), float(position.y), boxmain.width * scale, boxmain.height * scale}, {0, 0}, 0, WHITE);
     }
 };
 template<class P1, class P2> 
@@ -300,14 +305,15 @@ class GamePlay{
     P1 p1;
     P2 p2;
     Texture Skull;
-    Box box1;
-    Box box2;
+    vector<Box> boxes;
     
 public:
     int round;
-    GamePlay(P1 p1, P2 p2) : p1(p1),p2(p2),box1(Box(300)),box2(Box(50)){
+    GamePlay(P1 p1, P2 p2, int nBox) : p1(p1),p2(p2){
         Skull = LoadTexture("assets/crossarrows_skull.png");
         srand(time(0));
+        for(int i=0;i<nBox;i++)
+            boxes.push_back(Box(p1.screenDiffPos.y,i+1));
     }
     void drawHealthBar(){
         float healthWidthFactor = (screenWidth / 2 - (10 * 12)) / 200.0, rounded = 1.0;
@@ -361,8 +367,8 @@ public:
         drawHealthBar();
         p1.draw();
         p2.draw();
-        box1.draw(p1,p2);
-        box2.draw(p1,p2);
+        for(int i=0;i<boxes.size();i++)
+            boxes[i].draw(p1,p2);
     }
 };
 
@@ -373,7 +379,7 @@ int main(){
     AutoPlayer player2({2 * screenWidth, screenHeight - 150}, 100, {0, 234, 255, 255}, false, false, 45, 0.6, 1);
     // Texture2D bg = LoadTexture("bg.png");
     // GamePlay<Player, Player> game(player1, player2);
-    GamePlay<Player, AutoPlayer> game(player1, player2);
+    GamePlay<Player, AutoPlayer> game(player1, player2, 2);
     SetTargetFPS(60);
     while (WindowShouldClose() == false){
         // Rectangle sourceRec = {0.0f, 0.0f, (float)bg.width, (float)bg.height};
