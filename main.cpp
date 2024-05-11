@@ -12,6 +12,24 @@ using namespace std;
 bool circleCollision(Vector2 pos1, Vector2 pos2, int rad1, int rad2){
     return (sqrt(pow(pos1.x - pos2.x, 2) + pow(pos1.y - pos2.y, 2)) < rad1 + rad2);
 }
+bool boxCollision(Vector2 Boxpos, Vector2 arrowPos,int arrowradius, double boxHeight, double boxWidth){
+    float arrowLeft = arrowPos.x - arrowradius*2;
+    float arrowRight = arrowPos.x + arrowradius*2;
+    float arrowTop = arrowPos.y - arrowradius*2;
+    float arrowBottom = arrowPos.y + arrowradius*2;
+    // cout<<"arrow: "<<arrowLeft<<" "<<arrowRight<<" "<<arrowTop<<" "<<arrowBottom<<endl;
+   
+    float boxLeft = Boxpos.x+190;
+    float boxRight = Boxpos.x + boxWidth+190;
+    float boxTop = Boxpos.y+190;
+    float boxBottom = Boxpos.y + boxHeight+190;
+    // cout<<"box: "<<boxLeft<<" "<<boxRight<<" "<<boxTop<<" "<<boxBottom<<endl;
+   
+    if (arrowLeft < boxRight && arrowRight > boxLeft && arrowTop < boxBottom && arrowBottom > boxTop) {
+        return true;  
+    }
+    return false;
+}
 
 class Arrow{
     Vector2 position, initialVel;
@@ -20,6 +38,7 @@ class Arrow{
     double time, power;
     int moveDir, radius, angle, velocity;
     public:
+    template<class, class> friend class GamePlay;
         friend class Player;
         Arrow(Vector2 pos= {0,0}, Vector2 vel={0,0},int velo=50, int rad=5, int ang=45,int pow=0.6, Color col=RED, int moveDir=1):position(pos),velocity(velo),radius(rad), angle(ang),power(pow),color(col),time(0),moveDir(moveDir),initialVel(vel){
             ball = LoadTexture("assets/ball.png");
@@ -290,6 +309,7 @@ class Box{
     float scale, screenHeightDiff;
     int boxNo;
     public:
+    template<class, class> friend class GamePlay;
     Box(float diff, int n=1):screenHeightDiff(diff),boxNo(n),scale(0.8){
         boxmain = LoadTexture("assets/box.png");
         width = 306*scale, height = 296*scale;
@@ -358,6 +378,30 @@ public:
     }
     void update(){
         // CheckCollisionRecs(p2.arrow.position,box1.position);
+        if(boxCollision(boxes[0].position,p1.arrow.position,p1.arrow.radius,boxes[0].height,boxes[0].width)){
+            p1.arrow.reset();
+            p1.arrow.position = p1.initial;
+            p1.isShooting = false;
+            p1.settingUp = true;
+        }
+        if(boxCollision(boxes[1].position,p1.arrow.position,p1.arrow.radius,boxes[1].height,boxes[1].width)){
+            p1.arrow.reset();
+            p1.arrow.position = p1.initial;
+            p1.isShooting = false;
+            p1.settingUp = true;
+        }
+        if(boxCollision(boxes[0].position,p2.arrow.position,p2.arrow.radius,boxes[0].height,boxes[0].width)){
+            p2.arrow.reset();
+            p2.arrow.position = p2.initial;
+            p2.isShooting = false;
+            p2.settingUp = true;
+        }
+        if(boxCollision(boxes[1].position,p2.arrow.position,p2.arrow.radius,boxes[1].height,boxes[1].width)){
+            p2.arrow.reset();
+            p2.arrow.position = p2.initial;
+            p2.isShooting = false;
+            p2.settingUp = true;
+        }
         p1.update();
         p2.update();
         p1.updateArrow(p2);
@@ -375,11 +419,11 @@ public:
 int main(){
     InitWindow(screenWidth, screenHeight, "ARROW WARS!");
     Player player1({150, screenHeight - 150}, 100,{224, 16, 0, 255}, true, true);
-    // Player player2({2 * screenWidth, screenHeight - 150}, 100, {0, 234, 255, 255}, false, false);
-    AutoPlayer player2({2 * screenWidth, screenHeight - 150}, 100, {0, 234, 255, 255}, false, false, 45, 0.6, 1);
+    Player player2({2 * screenWidth, screenHeight - 150}, 100, {0, 234, 255, 255}, false, false);
+    // AutoPlayer player2({2 * screenWidth, screenHeight - 150}, 100, {0, 234, 255, 255}, false, false, 45, 0.6, 1);
     // Texture2D bg = LoadTexture("bg.png");
-    // GamePlay<Player, Player> game(player1, player2);
-    GamePlay<Player, AutoPlayer> game(player1, player2, 2);
+    GamePlay<Player, Player> game(player1, player2,2);
+    // GamePlay<Player, AutoPlayer> game(player1, player2, 2);
     SetTargetFPS(60);
     while (WindowShouldClose() == false){
         // Rectangle sourceRec = {0.0f, 0.0f, (float)bg.width, (float)bg.height};
