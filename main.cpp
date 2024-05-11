@@ -9,6 +9,10 @@ const int screenHeight = 920;
 
 using namespace std;
 
+bool hscircleCollision(Vector2 pos1, Vector2 pos2, int rad1, int rad2){
+    DrawCircle(pos2.x,pos2.y-400,30,WHITE);
+    return (sqrt(pow(pos1.x - pos2.x, 2) + pow(pos1.y - (pos2.y-400), 2)) < rad1 + 30);
+}
 bool circleCollision(Vector2 pos1, Vector2 pos2, int rad1, int rad2){
     return (sqrt(pow(pos1.x - pos2.x, 2) + pow(pos1.y - pos2.y, 2)) < rad1 + rad2);
 }
@@ -134,7 +138,38 @@ class Player{
                 arrow.draw();
                 arrow.time += 1.0 / 20.0;
                 arrow.move(p2.position.x);
+                if (hscircleCollision(arrow.position, p2.position, arrow.radius, 300) && ((arrow.moveDir != 1 && p2.isLeft) || (arrow.moveDir == 1 && !p2.isLeft))){
+                    cout<<"1"<<endl;
+                    arrow.reset();
+                    arrow.position = initial;
+                    isShooting = false;
+                    settingUp = true;
+                    p2.health -= 80;
+                }
+                // if (isLeft)
+                // {
+                //     if (hscircleCollision(arrow.position, p2.position, arrow.radius, 200,p2.position.x-200) && ((arrow.moveDir != 1 && p2.isLeft) || (arrow.moveDir == 1 && !p2.isLeft))){
+                //     cout<<"1"<<endl;
+                //     arrow.reset();
+                //     arrow.position = initial;
+                //     isShooting = false;
+                //     settingUp = true;
+                //     p2.health -= 80;
+                //     }
+                // }
+                // if (!isLeft)
+                // {
+                //     if (hscircleCollision(arrow.position, p2.position, arrow.radius, 200,p2.position.x+240) && ((arrow.moveDir != 1 && p2.isLeft) || (arrow.moveDir == 1 && !p2.isLeft))){
+                //     cout<<"1"<<endl;
+                //     arrow.reset();
+                //     arrow.position = initial;
+                //     isShooting = false;
+                //     settingUp = true;
+                //     p2.health -= 80;
+                //     }
+                // }
                 if (circleCollision(arrow.position, p2.position, arrow.radius, 300) && ((arrow.moveDir != 1 && p2.isLeft) || (arrow.moveDir == 1 && !p2.isLeft))){
+                    cout<<"2"<<endl;
                     arrow.reset();
                     arrow.position = initial;
                     isShooting = false;
@@ -432,8 +467,8 @@ int main(){
         BeginDrawing();
         DrawText(TextFormat("Round %i", game.round), screenWidth / 2 - 85, screenHeight / 2 - 300, 50, WHITE);
         ClearBackground(BLACK);
-        game.update();
         game.draw();
+        game.update();
         EndDrawing();
     }
 
