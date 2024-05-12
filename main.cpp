@@ -5,6 +5,8 @@
 #include "menu.h"
 #include <cstdlib>
 #include <ctime>
+#include "titlescreen.h"
+#include <fstream>
 
 const double gravity = 9.8;
 const int screenWidth = 1800;
@@ -25,19 +27,67 @@ bool boxCollision(Vector2 Boxpos, Vector2 arrowPos,int arrowradius, double boxHe
     float arrowRight = arrowPos.x + arrowradius*2;
     float arrowTop = arrowPos.y - arrowradius*2;
     float arrowBottom = arrowPos.y + arrowradius*2;
-    // cout<<"arrow: "<<arrowLeft<<" "<<arrowRight<<" "<<arrowTop<<" "<<arrowBottom<<endl;
    
     float boxLeft = Boxpos.x+190;
     float boxRight = Boxpos.x + boxWidth+190;
     float boxTop = Boxpos.y+190;
     float boxBottom = Boxpos.y + boxHeight+190;
-    // cout<<"box: "<<boxLeft<<" "<<boxRight<<" "<<boxTop<<" "<<boxBottom<<endl;
    
     if (arrowLeft < boxRight && arrowRight > boxLeft && arrowTop < boxBottom && arrowBottom > boxTop) {
         return true;  
     }
     return false;
 }
+class data{
+    int health1;
+    int health2;
+    bool isLeft;
+    public:
+    int geth1(){
+        return health1;
+    }
+    int geth2(){
+        return health2;
+    }
+    bool getisleft(){
+        return isLeft;
+    }
+    void seth1(int a){
+        health1=a;
+    }
+    void seth2(int a){
+        health2=a;
+    }
+    void setil(bool a){
+        isLeft=a;
+    }
+    void savedata()
+    {
+        ofstream outfile;
+        outfile.open("playerdata.txt");
+        outfile << health1<<endl<<health2<<endl<<isLeft;
+        outfile.close();
+    }
+    void readdata()
+    {
+        ifstream infile;
+        infile.open("playerdata.txt");
+        for(int i = 0 ; i<3;i++)
+        {
+            if(i==0)
+            {infile >> health1;}
+            if(i==1){
+                infile >>health2;}
+            if(i==3){
+                bool a;
+                infile>>a;
+                if(a==1||a==0)
+                {isLeft=a;}
+            }
+        }
+        infile.close();
+    }
+};
 
 class Arrow{
     Vector2 position, initialVel;
@@ -56,13 +106,10 @@ class Arrow{
             position.y = y;
         }
         void draw(){
-
-        // DrawCircle(position.x, position.y, radius, color);
         DrawTexturePro(ball, {0, 0, float(ball.width), float(ball.height)}, {position.x, position.y, ball.width * 0.1f, ball.height * 0.1f}, {0, 0}, angle, WHITE);
     }
     void move(int x){
         if (((position.x < screenWidth / 2 || (x > (screenWidth - 150) && x < ((screenWidth - 150) + initialVel.x))) && moveDir == 1) || ((position.x > screenWidth / 2 || (x < 150 && x > (150 - initialVel.x))) && moveDir == -1))
-            // cout<<"posX: "<<position.x<<" posy: "<<position.y<<" t: "<<time<<endl;
             position.x += moveDir * (velocity*power* 0.5* cos((angle * PI) / 180.0));
             position.y -= (velocity* power * sin((angle * PI) / 180.0) - 0.5 * gravity * time * time);
     }
@@ -143,9 +190,6 @@ class Player{
                 arrow.time += 1.0 / 20.0;
                 arrow.move(p2.position.x);
                 if (hscircleCollision(arrow.position, p2.position, arrow.radius, 300) && ((arrow.moveDir != 1 && p2.isLeft) || (arrow.moveDir == 1 && !p2.isLeft))){
-                    cout<<"1"<<endl;
-                    // DrawText("HEADSHOT", screenWidth / 2 - 250, screenHeight / 2 - 30, 100, WHITE);
-                    // ClearBackground(BLACK);
                     arrow.reset();
                     arrow.position = initial;
                     isShooting = false;
@@ -153,13 +197,10 @@ class Player{
                     p2.health -= 80;
                     Sound shootingSound = LoadSound("hitting_sound.mp3");
                     PlaySound(shootingSound);
-                    // UnloadSound(shootingSound);
                 }
                 if (circleCollision(arrow.position, p2.position, arrow.radius, 300) && ((arrow.moveDir != 1 && p2.isLeft) || (arrow.moveDir == 1 && !p2.isLeft))){
                     Sound shootingSound = LoadSound("hitting_sound.mp3");
                     PlaySound(shootingSound);
-                    
-                    cout<<"2"<<endl;
                     arrow.reset();
                     arrow.position = initial;
                     isShooting = false;
@@ -240,12 +281,12 @@ class Player{
             }else
                 settingUp = false;
         }
-        void update(){
+        void update(bool firstShoot){
             if (health2 > health)
                 health2 -= 0.3;
-            if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && turn)
+            if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && turn && GetMousePosition().y>150)
                 mousePos = GetMousePosition();
-            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && turn){
+            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && turn && GetMousePosition().y>150){
                 mouseDown = true;
                 Vector2 currMousePos = GetMousePosition();
                 double npower = isLeft ? ((mousePos.x - currMousePos.x) / 300) : ((currMousePos.x - mousePos.x) / 300);
@@ -258,7 +299,7 @@ class Player{
                     angle = nangle;
                 
             }
-            if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && turn){
+            if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && turn && firstShoot && GetMousePosition().y>150){
                 shoot();
                 Sound throwS = LoadSound("throw.mp3");
                 PlaySound(throwS);
@@ -289,10 +330,8 @@ class AutoPlayer: public Player{
                         targetPower = 1;
                     targetSet = true;
                 }
-                cout<<"Angle: "<<angle<<" "<<targetAngle<<endl;
                 if(targetAngle <= 90 && targetAngle >= -45 && angle!=targetAngle){
                     int diff = abs(targetAngle - angle)/5 + 1;
-                    cout<<"angle diff: "<<diff<<endl;
                     if(targetAngle>angle+diff)
                         angle+=diff;
                     else if(targetAngle<angle-diff)
@@ -300,7 +339,6 @@ class AutoPlayer: public Player{
                     else
                         angle = targetAngle;
                 }
-                    cout<<"Power: "<<power<<" "<<targetPower<<endl;
                 if(targetPower <= 1 && targetPower >= 0 && !((power+0.009)>targetPower && (power-0.009)<targetPower)){
                     double diff = abs(targetPower - power)/5.0;
                     if(targetPower>(power+diff))
@@ -324,7 +362,7 @@ class AutoPlayer: public Player{
                 shootTriggered = false;
             Player::updateArrow(p2);
         }
-        void update(){
+        void update(bool first){
             if (health2 > health)
                 health2 -= 0.3;
         }
@@ -361,7 +399,7 @@ class Powerups:public Box{
     }
     void randompower(Player &p2){
         cout<<"1"<<endl;
-        int randomNumber = rand() % 3 + 1;
+        int randomNumber = rand() % 6 + 1;
         switch (randomNumber){
             case 1:{
                 cout<<"2"<<endl;
@@ -379,25 +417,59 @@ class Powerups:public Box{
             }
             case 3:{
                 cout<<"4"<<endl;
-                p2.health-=10000;
                 Sound boxHit = LoadSound("fatality.mp3");
                 PlaySound(boxHit);
+                if(p2.health<90)
+                    p2.health+=10;
+                break;
+            }
+            case 4:{
+                cout<<"5"<<endl;
+                Sound boxHit = LoadSound("box_hit.mp3");
+                if(p2.health<80)
+                    p2.health+=20;
                 break;
             }
         }
     }
-    };
+};
+class GamePlayBase{
+    public:
+        int round;
+        GamePlayBase():round(1){}
+        virtual void draw() = 0;
+        virtual void update(bool) = 0;
+        virtual void drawHealthBar() = 0;
+        virtual bool getMenuOn() = 0;
+};
 template<class P1, class P2> 
-class GamePlay{
+class GamePlay:public GamePlayBase{
     P1 p1;
     P2 p2;
-    Texture Skull;
+    Texture Skull, pause;
     vector<Powerups> boxes;
-    
+    data a;
+    OptionsScreen opMenu;
+    bool options, menuOn, frShoot;
+    int fps;
 public:
-    int round;
-    GamePlay(P1 p1, P2 p2, int nBox) : p1(p1),p2(p2),round(1){
+    GamePlay(P1 p1, P2 p2, int nBox) : p1(p1),p2(p2),options(false), menuOn(false),frShoot(true){
+        addOptionsMenu(opMenu);
+        opMenu.getItem(0).onClick = [this]{
+            this->options = false;
+            this->frShoot = false;
+        };
+        opMenu.getItem(1).onClick = [this]{
+            this->restartGame();
+            this->options = false;
+            this->frShoot = false;
+        };
+        
+        opMenu.getItem(2).onClick = [this]{
+            this->soundOnOff();
+        };
         Skull = LoadTexture("assets/crossarrows_skull.png");
+        pause = LoadTexture("assets/pause2.png");
         srand(time(0));
         for(int i=0;i<nBox;i++)
             boxes.push_back(Powerups(p1.screenDiffPos.y,i+1));
@@ -405,6 +477,19 @@ public:
     void operator++(){
         round++;
     }
+    void restartGame(){
+        p1.health = 100;
+        p1.health2 = 100;
+        p2.health = 100;
+        p2.health2 = 100;
+        round = 1;
+    }
+    void soundOnOff(){
+        // else
+        cout<<"Stop Sound"<<endl;
+        //     PlaySound(LoadSound("assets/arrow.wav"));
+    }
+    bool getMenuOn(){return menuOn;}
     void drawHealthBar(){
         float healthWidthFactor = (screenWidth / 2 - (10 * 12)) / 200.0, rounded = 1.0;
         DrawRectangleRounded({(screenWidth / 4), 40, screenWidth / 2, screenHeight / 10}, 2, 5, Color({44, 0, 81, 255}));
@@ -418,40 +503,16 @@ public:
         Rectangle destRec = {float((screenWidth / 2) - Skull.width * 0.125), 30.0f, Skull.width * 0.25f, Skull.height * 0.25f};
         DrawTexturePro(Skull, sourceRec, destRec, {0, 0}, 0.0f, WHITE);
         }
-        friend bool checkWin(){
-        if (p1.health <= 0 || p2.health <= 0 || p1.health2 <= 0 || p2.health2 <= 0){
-            if (p1.health <= 0 || p1.health2 <= 0){
-                DrawText("BLUE WINS", screenWidth / 2 - 250, screenHeight / 2 - 30, 100, WHITE);
-                DrawText("Press Space To Continue", screenWidth / 2 - 320, screenHeight / 2 + 100, 50, WHITE);
-                if (IsKeyDown(KEY_SPACE))
-                {
-                    ClearBackground(BLACK);
-                    p1.health = 100;
-                    p1.health2 = 100;
-                    p2.health = 100;
-                    p2.health2 = 100;
-                    
-                    return true;
-                }
-            }
-            else{
-                DrawText("RED WINS", screenWidth / 2 - 250, screenHeight / 2 - 30, 100, WHITE);
-                DrawText("Press Space To Continue", screenWidth / 2 - 320, screenHeight / 2 + 100, 50, WHITE);
-                if (IsKeyDown(KEY_SPACE))
-                {
-                    ClearBackground(BLACK);
-                    p1.health = 100;
-                    p1.health2 = 100;
-                    p2.health = 100;
-                    p2.health2 = 100;
-                    
-                    return true;
-                }
-            }
-        }
-    }
-    void update(){
-        // CheckCollisionRecs(p2.arrow.position,box1.position);
+        friend bool checkWin();
+    void update(bool firstShoot){
+        a.seth1(p1.health);
+        a.seth2(p2.health);
+        if(p1.turn==1||p1.turn==0)
+       { a.setil(p1.turn);}
+        a.savedata();
+        fps++;
+        fps%=60;
+        if(!options){
         int luck = rand() % 3 ;
         if(boxCollision(boxes[0].position,p1.arrow.position,p1.arrow.radius,boxes[0].height,boxes[0].width)){
             if(!luck)
@@ -494,53 +555,140 @@ public:
             Sound wall = LoadSound("wall_hit.mp3");
             PlaySound(wall);
         }
-        p1.update();
-        p2.update();
+        if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && GetMousePosition().y<150){
+            if(GetMousePosition().x>screenWidth-130 && GetMousePosition().x<screenWidth-30 && GetMousePosition().y>50 && GetMousePosition().y<150){
+                options = true;
+            }
+        }
+        if(firstShoot)
+            firstShoot = frShoot;
+        p1.update(firstShoot);
+        p2.update(firstShoot);
         p1.updateArrow(p2);
         p2.updateArrow(p1);
+        cout<<"frshoot: "<<frShoot<<endl;
+        cout<<"firsthoot: "<<firstShoot<<endl;
+        if(!frShoot && fps%59==0)
+            frShoot = true;
+        }
     }
     void draw(){
+        if(options){
+            showOptionsMenu(opMenu);
+        }
+        else{
+        DrawTexturePro(pause,{0,0,float(pause.width), float(pause.height)},{screenWidth - 130, 50,0.1f*float(pause.width),0.1f*float(pause.width)},{0,0} , 0, WHITE);
         drawHealthBar();
         p1.draw();
         p2.draw();
         for(int i=0;i<boxes.size();i++)
             boxes[i].draw(p1,p2);
+        }
     }
 };
+friend bool checkWin(){
+      if (p1.health <= 0 || p2.health <= 0 || p1.health2 <= 0 || p2.health2 <= 0){
+          if (p1.health <= 0 || p1.health2 <= 0){
+              DrawText("BLUE WINS", screenWidth / 2 - 250, screenHeight / 2 - 30, 100, WHITE);
+              DrawText("Press Space To Continue", screenWidth / 2 - 320, screenHeight / 2 + 100, 50, WHITE);
+              if (IsKeyDown(KEY_SPACE))
+              {
+                  ClearBackground(BLACK);
+                  p1.health = 100;
+                  p1.health2 = 100;
+                  p2.health = 100;
+                  p2.health2 = 100;
 
+                  return true;
+              }
+          }
+          else{
+              DrawText("RED WINS", screenWidth / 2 - 250, screenHeight / 2 - 30, 100, WHITE);
+              DrawText("Press Space To Continue", screenWidth / 2 - 320, screenHeight / 2 + 100, 50, WHITE);
+              if (IsKeyDown(KEY_SPACE))
+              {
+                  ClearBackground(BLACK);
+                  p1.health = 100;
+                  p1.health2 = 100;
+                  p2.health = 100;
+                  p2.health2 = 100;
+
+                  return true;
+              }
+          }
+      }
+  }
 int main(){
+    data d;
+    d.readdata();
+    int h1 = d.geth1();
+    int h2 = d.geth2();
+    bool il = d.getisleft();
     srand(time(nullptr));
     InitAudioDevice();
     InitWindow(screenWidth, screenHeight, "ARROW WARS!");
+    TitleScreen s1;
     Menu menu;
     addMenu(menu);
-    
-    Player player1({150, screenHeight - 150}, 100,{224, 16, 0, 255}, true, true);
-    Player player2({2 * screenWidth, screenHeight - 150}, 100, {0, 234, 255, 255}, false, false);
-    // AutoPlayer player2({2 * screenWidth, screenHeight - 150}, 100, {0, 234, 255, 255}, false, false, 45, 0.6, 1);
+    Player player1({150, screenHeight - 150}, h1,{224, 16, 0, 255}, true, true);
+    bool menuOn = true, menuMouseClick=false, loading= true, single=true;
     Texture2D bg = LoadTexture("back.png");
     Texture2D bottom = LoadTexture("bottom.png");
-    GamePlay<Player, Player> game(player1, player2,2);
-    // GamePlay<Player, AutoPlayer> game(player1, player2, 2);
+    GamePlayBase *game;
+    menu.getItem(0).onClick = [&menuOn, &game,&player1, &single,&h1,&h2,&il]{
+        _sleep(100);
+        menuOn = false;
+        if(single)
+            game = new GamePlay<Player, AutoPlayer>(player1, AutoPlayer({2 * screenWidth, screenHeight - 150}, h2, {0, 234, 255, 255}, false, false, 45, 0.6, 1), 2);
+        else
+            game = new GamePlay<Player, Player>(player1, Player({2 * screenWidth, screenHeight - 150}, h2, {0, 234, 255, 255}, false, false), 2);
+    };
+    menu.getItem(1).onClick = [&menuOn, &game,&player1, &single, &menu]{
+        cout<<single<<" single"<<endl;
+        if(single)
+            menu.selectMode(single,true);
+        single = true;
+    };
+    menu.getItem(2).onClick = [&menu, &single]{
+        cout<<single<<" single"<<endl;
+        if(!single)
+            menu.selectMode(single, false);
+        single = false;
+    };
+    menu.getItem(3).onClick = []{
+        cout<<"Options"<<endl;
+    };
+    menu.getItem(4).onClick = []{
+        cout<<"Closing window!"<<endl;
+        CloseWindow();
+        return 0;
+    };
+    Rectangle sourceRec = {0.0f, 0.0f, (float)bg.width, (float)bg.height};
+    Rectangle destRec = {0.0f, 0.0f, (float)screenWidth, (float)screenHeight};
+    DrawTexturePro(bg, sourceRec, destRec, {0,0}, 0.0f, WHITE);
     SetTargetFPS(60);
     Sound backgroundMusic = LoadSound("bgmusic.mp3");
     PlaySound(backgroundMusic);
     while (WindowShouldClose() == false){
-        
-            
-        
-        Rectangle sourceRec = {0.0f, 0.0f, (float)bg.width, (float)bg.height};
-        Rectangle destRec = {0.0f, 0.0f, (float)screenWidth, (float)screenHeight};
-        DrawTexturePro(bg, sourceRec, destRec, {0,0}, 0.0f, WHITE);
-        DrawTexturePro(bottom, sourceRec, destRec, {0,0}, 0.0f, WHITE);
         BeginDrawing();
-        // showMenu(menu);
-        DrawText(TextFormat("Round %i", game.round), screenWidth / 2 - 85, screenHeight / 2 - 300, 50, WHITE);
-        ClearBackground(BLACK);
-        game.draw();
-        game.update();
-        
-        if(checkWin()){
+        if(loading)
+            loading = s1.draw();
+        else if(menuOn){
+            showMenu(menu);
+            menu.checkMouse();
+        }
+        else{
+            DrawTexturePro(bg, sourceRec, destRec, {0,0}, 0.0f, WHITE);
+            DrawTexturePro(bottom, sourceRec, destRec, {0,0}, 0.0f, WHITE);
+            DrawText(TextFormat("Round %i", game->round), screenWidth / 2 - 85, screenHeight / 2 - 300, 50, WHITE);
+            ClearBackground(BLACK);
+            game->draw();
+            if(!menuMouseClick){
+                game->update(false);
+                menuMouseClick = true;
+            }
+            else game->update(true);
+          if(checkWin())
         ++game;
         }
         EndDrawing();
