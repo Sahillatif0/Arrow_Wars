@@ -12,6 +12,7 @@ const int screenHeight = 920;
 
 using namespace std;
 
+
 bool hscircleCollision(Vector2 pos1, Vector2 pos2, int rad1, int rad2){
     DrawCircle(pos2.x,pos2.y-400,50,WHITE);
     return (sqrt(pow(pos1.x - pos2.x, 2) + pow(pos1.y - (pos2.y-400), 2)) < rad1 + 30);
@@ -150,8 +151,14 @@ class Player{
                     isShooting = false;
                     settingUp = true;
                     p2.health -= 80;
+                    Sound shootingSound = LoadSound("hitting_sound.mp3");
+                    PlaySound(shootingSound);
+                    // UnloadSound(shootingSound);
                 }
                 if (circleCollision(arrow.position, p2.position, arrow.radius, 300) && ((arrow.moveDir != 1 && p2.isLeft) || (arrow.moveDir == 1 && !p2.isLeft))){
+                    Sound shootingSound = LoadSound("hitting_sound.mp3");
+                    PlaySound(shootingSound);
+                    
                     cout<<"2"<<endl;
                     arrow.reset();
                     arrow.position = initial;
@@ -249,9 +256,12 @@ class Player{
                 int nangle = (currMousePos.y - mousePos.y) / 2;
                 if (nangle < 90 && nangle >= -45)
                     angle = nangle;
+                
             }
             if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && turn){
                 shoot();
+                Sound throwS = LoadSound("throw.mp3");
+                PlaySound(throwS);
                 mouseDown = false;
                 turnPlayed = true;
                 mousePos = initial;
@@ -356,16 +366,22 @@ class Powerups:public Box{
             case 1:{
                 cout<<"2"<<endl;
                 p2.health-=30;
+                Sound boxHit = LoadSound("box_hit.mp3");
+                PlaySound(boxHit);
                 break;
             }
             case 2:{
                 cout<<"3"<<endl;
                 p2.health-=40;
+                Sound boxHit = LoadSound("box_hit.mp3");
+                PlaySound(boxHit);
                 break;
             }
             case 3:{
                 cout<<"4"<<endl;
                 p2.health-=10000;
+                Sound boxHit = LoadSound("fatality.mp3");
+                PlaySound(boxHit);
                 break;
             }
         }
@@ -380,11 +396,14 @@ class GamePlay{
     
 public:
     int round;
-    GamePlay(P1 p1, P2 p2, int nBox) : p1(p1),p2(p2){
+    GamePlay(P1 p1, P2 p2, int nBox) : p1(p1),p2(p2),round(1){
         Skull = LoadTexture("assets/crossarrows_skull.png");
         srand(time(0));
         for(int i=0;i<nBox;i++)
             boxes.push_back(Powerups(p1.screenDiffPos.y,i+1));
+    }
+    void operator++(){
+        round++;
     }
     void drawHealthBar(){
         float healthWidthFactor = (screenWidth / 2 - (10 * 12)) / 200.0, rounded = 1.0;
@@ -398,8 +417,10 @@ public:
         Rectangle sourceRec = {0.0f, 0.0f, (float)Skull.width, (float)Skull.height};
         Rectangle destRec = {float((screenWidth / 2) - Skull.width * 0.125), 30.0f, Skull.width * 0.25f, Skull.height * 0.25f};
         DrawTexturePro(Skull, sourceRec, destRec, {0, 0}, 0.0f, WHITE);
-        if (p1.health == 0 || p2.health == 0 || p1.health2 == 0 || p2.health2 == 0){
-            if (p1.health == 0 || p1.health2 == 0){
+        }
+        friend bool checkWin(){
+        if (p1.health <= 0 || p2.health <= 0 || p1.health2 <= 0 || p2.health2 <= 0){
+            if (p1.health <= 0 || p1.health2 <= 0){
                 DrawText("BLUE WINS", screenWidth / 2 - 250, screenHeight / 2 - 30, 100, WHITE);
                 DrawText("Press Space To Continue", screenWidth / 2 - 320, screenHeight / 2 + 100, 50, WHITE);
                 if (IsKeyDown(KEY_SPACE))
@@ -409,7 +430,8 @@ public:
                     p1.health2 = 100;
                     p2.health = 100;
                     p2.health2 = 100;
-                    round++;
+                    
+                    return true;
                 }
             }
             else{
@@ -422,7 +444,8 @@ public:
                     p1.health2 = 100;
                     p2.health = 100;
                     p2.health2 = 100;
-                    round++;
+                    
+                    return true;
                 }
             }
         }
@@ -437,6 +460,9 @@ public:
             p1.arrow.position = p1.initial;
             p1.isShooting = false;
             p1.settingUp = true;
+            Sound wall = LoadSound("wall_hit.mp3");
+            PlaySound(wall);
+            
         }
         if(boxCollision(boxes[1].position,p1.arrow.position,p1.arrow.radius,boxes[1].height,boxes[1].width)){
             if(!luck)
@@ -445,6 +471,8 @@ public:
             p1.arrow.position = p1.initial;
             p1.isShooting = false;
             p1.settingUp = true;
+            Sound wall = LoadSound("wall_hit.mp3");
+            PlaySound(wall);
         }
         if(boxCollision(boxes[0].position,p2.arrow.position,p2.arrow.radius,boxes[0].height,boxes[0].width)){
             if(!luck)
@@ -453,6 +481,8 @@ public:
             p2.arrow.position = p2.initial;
             p2.isShooting = false;
             p2.settingUp = true;
+            Sound wall = LoadSound("wall_hit.mp3");
+            PlaySound(wall);
         }
         if(boxCollision(boxes[1].position,p2.arrow.position,p2.arrow.radius,boxes[1].height,boxes[1].width)){
             if(!luck)
@@ -461,6 +491,8 @@ public:
             p2.arrow.position = p2.initial;
             p2.isShooting = false;
             p2.settingUp = true;
+            Sound wall = LoadSound("wall_hit.mp3");
+            PlaySound(wall);
         }
         p1.update();
         p2.update();
@@ -478,9 +510,11 @@ public:
 
 int main(){
     srand(time(nullptr));
+    InitAudioDevice();
     InitWindow(screenWidth, screenHeight, "ARROW WARS!");
     Menu menu;
     addMenu(menu);
+    
     Player player1({150, screenHeight - 150}, 100,{224, 16, 0, 255}, true, true);
     Player player2({2 * screenWidth, screenHeight - 150}, 100, {0, 234, 255, 255}, false, false);
     // AutoPlayer player2({2 * screenWidth, screenHeight - 150}, 100, {0, 234, 255, 255}, false, false, 45, 0.6, 1);
@@ -489,7 +523,12 @@ int main(){
     GamePlay<Player, Player> game(player1, player2,2);
     // GamePlay<Player, AutoPlayer> game(player1, player2, 2);
     SetTargetFPS(60);
+    Sound backgroundMusic = LoadSound("bgmusic.mp3");
+    PlaySound(backgroundMusic);
     while (WindowShouldClose() == false){
+        
+            
+        
         Rectangle sourceRec = {0.0f, 0.0f, (float)bg.width, (float)bg.height};
         Rectangle destRec = {0.0f, 0.0f, (float)screenWidth, (float)screenHeight};
         DrawTexturePro(bg, sourceRec, destRec, {0,0}, 0.0f, WHITE);
@@ -500,9 +539,14 @@ int main(){
         ClearBackground(BLACK);
         game.draw();
         game.update();
+        
+        if(checkWin()){
+        ++game;
+        }
         EndDrawing();
     }
-
+    
+    CloseAudioDevice();
     CloseWindow();
     return 0;
 }
