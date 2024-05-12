@@ -2,9 +2,9 @@
 #include <raylib.h>
 #include <cmath>
 #include <vector>
+#include "menu.h"
 #include <cstdlib>
 #include <ctime>
-
 
 const double gravity = 9.8;
 const int screenWidth = 1800;
@@ -151,28 +151,6 @@ class Player{
                     settingUp = true;
                     p2.health -= 80;
                 }
-                // if (isLeft)
-                // {
-                //     if (hscircleCollision(arrow.position, p2.position, arrow.radius, 200,p2.position.x-200) && ((arrow.moveDir != 1 && p2.isLeft) || (arrow.moveDir == 1 && !p2.isLeft))){
-                //     cout<<"1"<<endl;
-                //     arrow.reset();
-                //     arrow.position = initial;
-                //     isShooting = false;
-                //     settingUp = true;
-                //     p2.health -= 80;
-                //     }
-                // }
-                // if (!isLeft)
-                // {
-                //     if (hscircleCollision(arrow.position, p2.position, arrow.radius, 200,p2.position.x+240) && ((arrow.moveDir != 1 && p2.isLeft) || (arrow.moveDir == 1 && !p2.isLeft))){
-                //     cout<<"1"<<endl;
-                //     arrow.reset();
-                //     arrow.position = initial;
-                //     isShooting = false;
-                //     settingUp = true;
-                //     p2.health -= 80;
-                //     }
-                // }
                 if (circleCollision(arrow.position, p2.position, arrow.radius, 300) && ((arrow.moveDir != 1 && p2.isLeft) || (arrow.moveDir == 1 && !p2.isLeft))){
                     cout<<"2"<<endl;
                     arrow.reset();
@@ -501,6 +479,8 @@ public:
 int main(){
     srand(time(nullptr));
     InitWindow(screenWidth, screenHeight, "ARROW WARS!");
+    Menu menu;
+    addMenu(menu);
     Player player1({150, screenHeight - 150}, 100,{224, 16, 0, 255}, true, true);
     Player player2({2 * screenWidth, screenHeight - 150}, 100, {0, 234, 255, 255}, false, false);
     // AutoPlayer player2({2 * screenWidth, screenHeight - 150}, 100, {0, 234, 255, 255}, false, false, 45, 0.6, 1);
@@ -515,6 +495,7 @@ int main(){
         DrawTexturePro(bg, sourceRec, destRec, {0,0}, 0.0f, WHITE);
         DrawTexturePro(bottom, sourceRec, destRec, {0,0}, 0.0f, WHITE);
         BeginDrawing();
+        // showMenu(menu);
         DrawText(TextFormat("Round %i", game.round), screenWidth / 2 - 85, screenHeight / 2 - 300, 50, WHITE);
         ClearBackground(BLACK);
         game.draw();
