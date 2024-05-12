@@ -73,13 +73,22 @@ void Menu::checkMouse(){
 }
 MenuItem& Menu::getItem(int i){
     return menus[i];
-
+}
+void addOptionsMenu(OptionsScreen &menu){
+    menu.addMenuItem(20,75,1,1,"Resume",{0,.5f*GetScreenHeight()});
+    menu.addMenuItem(20,75,1,2,"Restart",{0,.5f*GetScreenHeight()});
+    menu.addMenuItem(20,75,1,3,"Sound Off",{0,.5f*GetScreenHeight()});
+    menu.addMenuItem(20,75,1,4,"Save",{0,.5f*GetScreenHeight()});
+}
+void showOptionsMenu(OptionsScreen &menu){
+    menu.draw();
+    menu.checkMouse();
 }
 void addMenu(Menu &menu){
     menu.addMenuItem(40, 160, 1,1, "Play", {0, GetScreenHeight()/3.0f +  100});
     menu.addMenuItem(20, 75, 1,2, "Singleplayer", {150, GetScreenHeight()/3.0f + 210});
     menu.addMenuItem(20, 75, 2,2, "Multiplayer", {150, GetScreenHeight()/3.0f + 210});
-    menu.addMenuItem(20, 75, 1,3, "Options", {150, GetScreenHeight()/3.0f + 220});
+    menu.addMenuItem(20, 75, 1,3, "Continue", {150, GetScreenHeight()/3.0f + 220});
     menu.addMenuItem(20, 75, 2,3, "Exit", {150, GetScreenHeight()/3.0f + 220});
 }
 void showMenu(Menu &menu){

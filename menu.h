@@ -13,6 +13,7 @@ class MenuItem{
     Vector2 initPosition, position, initScale,scale, ainmation, cainmation;
     Texture woodie;
     friend class Menu;
+    friend class OptionsScreen;
     public:
         Vector2 inScale;
         MenuItem(int height, int width, int Nox, int Noy, string text, Vector2 position, Texture woodie);
@@ -34,6 +35,13 @@ class Menu{
         friend void showMenu(Menu &menu);
         
 };
+class OptionsScreen:public Menu{
+    public:
+    OptionsScreen(){}
+};
 void addMenu(Menu &menu);
 void showMenu(Menu &menu);
+void addOptionsMenu(OptionsScreen &menu);
+void showOptionsMenu(OptionsScreen &menu);
+
 #endif //MENU_H 

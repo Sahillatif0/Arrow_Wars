@@ -37,7 +37,6 @@ bool boxCollision(Vector2 Boxpos, Vector2 arrowPos,int arrowradius, double boxHe
     }
     return false;
 }
-
 class data{
     int health1;
     int health2;
@@ -284,9 +283,9 @@ class Player{
         void update(bool firstShoot){
             if (health2 > health)
                 health2 -= 0.3;
-            if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && turn)
+            if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && turn && GetMousePosition().y>150)
                 mousePos = GetMousePosition();
-            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && turn){
+            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && turn && GetMousePosition().y>150){
                 mouseDown = true;
                 Vector2 currMousePos = GetMousePosition();
                 double npower = isLeft ? ((mousePos.x - currMousePos.x) / 300) : ((currMousePos.x - mousePos.x) / 300);
@@ -298,7 +297,7 @@ class Player{
                 if (nangle < 90 && nangle >= -45)
                     angle = nangle;
             }
-            if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && turn && firstShoot){
+            if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && turn && firstShoot && GetMousePosition().y>150){
                 shoot();
                 mouseDown = false;
                 turnPlayed = true;
@@ -396,7 +395,7 @@ class Powerups:public Box{
     }
     void randompower(Player &p2){
         cout<<"1"<<endl;
-        int randomNumber = rand() % 3 + 1;
+        int randomNumber = rand() % 6 + 1;
         switch (randomNumber){
             case 1:{
                 cout<<"2"<<endl;
@@ -410,7 +409,14 @@ class Powerups:public Box{
             }
             case 3:{
                 cout<<"4"<<endl;
-                p2.health-=10000;
+                if(p2.health<90)
+                    p2.health+=10;
+                break;
+            }
+            case 4:{
+                cout<<"5"<<endl;
+                if(p2.health<80)
+                    p2.health+=20;
                 break;
             }
         }
@@ -423,21 +429,53 @@ class GamePlayBase{
         virtual void draw() = 0;
         virtual void update(bool) = 0;
         virtual void drawHealthBar() = 0;
+        virtual bool getMenuOn() = 0;
 };
 template<class P1, class P2> 
 class GamePlay:public GamePlayBase{
     P1 p1;
     P2 p2;
-    Texture Skull;
+    Texture Skull, pause;
     vector<Powerups> boxes;
     data a;
+    OptionsScreen opMenu;
+    bool options, menuOn, frShoot;
+    int fps;
 public:
-    GamePlay(P1 p1, P2 p2, int nBox) : p1(p1),p2(p2){
+    GamePlay(P1 p1, P2 p2, int nBox) : p1(p1),p2(p2),options(false), menuOn(false),frShoot(true){
+        addOptionsMenu(opMenu);
+        opMenu.getItem(0).onClick = [this]{
+            this->options = false;
+            this->frShoot = false;
+        };
+        opMenu.getItem(1).onClick = [this]{
+            this->restartGame();
+            this->options = false;
+            this->frShoot = false;
+        };
+        
+        opMenu.getItem(2).onClick = [this]{
+            this->soundOnOff();
+        };
         Skull = LoadTexture("assets/crossarrows_skull.png");
+        pause = LoadTexture("assets/pause2.png");
         srand(time(0));
         for(int i=0;i<nBox;i++)
             boxes.push_back(Powerups(p1.screenDiffPos.y,i+1));
     }
+    void restartGame(){
+        p1.health = 100;
+        p1.health2 = 100;
+        p2.health = 100;
+        p2.health2 = 100;
+        round = 1;
+    }
+    void soundOnOff(){
+        // else
+        cout<<"Stop Sound"<<endl;
+        //     PlaySound(LoadSound("assets/arrow.wav"));
+    }
+    bool getMenuOn(){return menuOn;}
     void drawHealthBar(){
         float healthWidthFactor = (screenWidth / 2 - (10 * 12)) / 200.0, rounded = 1.0;
         DrawRectangleRounded({(screenWidth / 4), 40, screenWidth / 2, screenHeight / 10}, 2, 5, Color({44, 0, 81, 255}));
@@ -485,6 +523,9 @@ public:
         if(p1.turn==1||p1.turn==0)
        { a.setil(p1.turn);}
         a.savedata();
+        fps++;
+        fps%=60;
+        if(!options){
         int luck = rand() % 3 ;
         if(boxCollision(boxes[0].position,p1.arrow.position,p1.arrow.radius,boxes[0].height,boxes[0].width)){
             if(!luck)
@@ -518,17 +559,35 @@ public:
             p2.isShooting = false;
             p2.settingUp = true;
         }
+        if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && GetMousePosition().y<150){
+            if(GetMousePosition().x>screenWidth-130 && GetMousePosition().x<screenWidth-30 && GetMousePosition().y>50 && GetMousePosition().y<150){
+                options = true;
+            }
+        }
+        if(firstShoot)
+            firstShoot = frShoot;
         p1.update(firstShoot);
         p2.update(firstShoot);
         p1.updateArrow(p2);
         p2.updateArrow(p1);
+        cout<<"frshoot: "<<frShoot<<endl;
+        cout<<"firsthoot: "<<firstShoot<<endl;
+        if(!frShoot && fps%59==0)
+            frShoot = true;
+        }
     }
     void draw(){
+        if(options){
+            showOptionsMenu(opMenu);
+        }
+        else{
+        DrawTexturePro(pause,{0,0,float(pause.width), float(pause.height)},{screenWidth - 130, 50,0.1f*float(pause.width),0.1f*float(pause.width)},{0,0} , 0, WHITE);
         drawHealthBar();
         p1.draw();
         p2.draw();
         for(int i=0;i<boxes.size();i++)
             boxes[i].draw(p1,p2);
+        }
     }
 };
 
@@ -568,7 +627,7 @@ int main(){
             menu.selectMode(single, false);
         single = false;
     };
-    menu.getItem(4).onClick = []{
+    menu.getItem(3).onClick = []{
         cout<<"Options"<<endl;
     };
     menu.getItem(4).onClick = []{
@@ -589,6 +648,7 @@ int main(){
             menu.checkMouse();
         }
         else{
+            DrawTexturePro(bg, sourceRec, destRec, {0,0}, 0.0f, WHITE);
             DrawTexturePro(bottom, sourceRec, destRec, {0,0}, 0.0f, WHITE);
             DrawText(TextFormat("Round %i", game->round), screenWidth / 2 - 85, screenHeight / 2 - 300, 50, WHITE);
             ClearBackground(BLACK);
