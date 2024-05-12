@@ -441,6 +441,7 @@ class GamePlayBase{
         virtual void update(bool) = 0;
         virtual void drawHealthBar() = 0;
         virtual bool getMenuOn() = 0;
+        virtual bool checkWin() = 0;
 };
 template<class P1, class P2> 
 class GamePlay:public GamePlayBase{
@@ -503,7 +504,39 @@ public:
         Rectangle destRec = {float((screenWidth / 2) - Skull.width * 0.125), 30.0f, Skull.width * 0.25f, Skull.height * 0.25f};
         DrawTexturePro(Skull, sourceRec, destRec, {0, 0}, 0.0f, WHITE);
         }
-        friend bool checkWin();
+        bool checkWin(){
+        if (p1.health <= 0 || p2.health <= 0 || p1.health2 <= 0 || p2.health2 <= 0){
+            if (p1.health <= 0 || p1.health2 <= 0){
+                DrawText("BLUE WINS", screenWidth / 2 - 250, screenHeight / 2 - 30, 100, WHITE);
+                DrawText("Press Space To Continue", screenWidth / 2 - 320, screenHeight / 2 + 100, 50, WHITE);
+                if (IsKeyDown(KEY_SPACE))
+                {
+                    ClearBackground(BLACK);
+                    p1.health = 100;
+                    p1.health2 = 100;
+                    p2.health = 100;
+                    p2.health2 = 100;
+
+                    return true;
+                }
+            }
+            else{
+                DrawText("RED WINS", screenWidth / 2 - 250, screenHeight / 2 - 30, 100, WHITE);
+                DrawText("Press Space To Continue", screenWidth / 2 - 320, screenHeight / 2 + 100, 50, WHITE);
+                if (IsKeyDown(KEY_SPACE))
+                {
+                    ClearBackground(BLACK);
+                    p1.health = 100;
+                    p1.health2 = 100;
+                    p2.health = 100;
+                    p2.health2 = 100;
+
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
     void update(bool firstShoot){
         a.seth1(p1.health);
         a.seth2(p2.health);
@@ -566,8 +599,6 @@ public:
         p2.update(firstShoot);
         p1.updateArrow(p2);
         p2.updateArrow(p1);
-        cout<<"frshoot: "<<frShoot<<endl;
-        cout<<"firsthoot: "<<firstShoot<<endl;
         if(!frShoot && fps%59==0)
             frShoot = true;
         }
@@ -586,38 +617,6 @@ public:
         }
     }
 };
-friend bool checkWin(){
-      if (p1.health <= 0 || p2.health <= 0 || p1.health2 <= 0 || p2.health2 <= 0){
-          if (p1.health <= 0 || p1.health2 <= 0){
-              DrawText("BLUE WINS", screenWidth / 2 - 250, screenHeight / 2 - 30, 100, WHITE);
-              DrawText("Press Space To Continue", screenWidth / 2 - 320, screenHeight / 2 + 100, 50, WHITE);
-              if (IsKeyDown(KEY_SPACE))
-              {
-                  ClearBackground(BLACK);
-                  p1.health = 100;
-                  p1.health2 = 100;
-                  p2.health = 100;
-                  p2.health2 = 100;
-
-                  return true;
-              }
-          }
-          else{
-              DrawText("RED WINS", screenWidth / 2 - 250, screenHeight / 2 - 30, 100, WHITE);
-              DrawText("Press Space To Continue", screenWidth / 2 - 320, screenHeight / 2 + 100, 50, WHITE);
-              if (IsKeyDown(KEY_SPACE))
-              {
-                  ClearBackground(BLACK);
-                  p1.health = 100;
-                  p1.health2 = 100;
-                  p2.health = 100;
-                  p2.health2 = 100;
-
-                  return true;
-              }
-          }
-      }
-  }
 int main(){
     data d;
     d.readdata();
@@ -688,7 +687,7 @@ int main(){
                 menuMouseClick = true;
             }
             else game->update(true);
-          if(checkWin())
+          if(game->checkWin())
         ++game;
         }
         EndDrawing();
