@@ -22,15 +22,3 @@ bool TitleScreen::draw(){
         _sleep(1000);
     return loaded<=1;
 }
-// int main(){
-//     InitWindow(1800, 920, "Menu");
-//     SetTargetFPS(60);
-//     TitleScreen titleScreen;
-//     while(!WindowShouldClose()){
-//         BeginDrawing();
-//         titleScreen.draw();
-//         EndDrawing();
-//     }
-//     CloseWindow();
-//     return 0;
-// }

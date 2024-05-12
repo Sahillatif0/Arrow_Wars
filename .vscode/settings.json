@@ -9,7 +9,9 @@
 		"**/*.exe": true,
 	},
 	"files.associations": {
+		"*.js": "javascript",
 		"iostream": "cpp",
-		"cmath": "cpp"
+		"cmath": "cpp",
+		"new": "cpp"
 	}
 }
