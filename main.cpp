@@ -5,6 +5,7 @@
 #include "menu.h"
 #include <cstdlib>
 #include <ctime>
+#include "titlescreen.h"
 
 const double gravity = 9.8;
 const int screenWidth = 1800;
@@ -233,7 +234,7 @@ class Player{
             }else
                 settingUp = false;
         }
-        void update(){
+        void update(bool firstShoot){
             if (health2 > health)
                 health2 -= 0.3;
             if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && turn)
@@ -250,7 +251,7 @@ class Player{
                 if (nangle < 90 && nangle >= -45)
                     angle = nangle;
             }
-            if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && turn){
+            if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && turn && firstShoot){
                 shoot();
                 mouseDown = false;
                 turnPlayed = true;
@@ -279,10 +280,8 @@ class AutoPlayer: public Player{
                         targetPower = 1;
                     targetSet = true;
                 }
-                cout<<"Angle: "<<angle<<" "<<targetAngle<<endl;
                 if(targetAngle <= 90 && targetAngle >= -45 && angle!=targetAngle){
                     int diff = abs(targetAngle - angle)/5 + 1;
-                    cout<<"angle diff: "<<diff<<endl;
                     if(targetAngle>angle+diff)
                         angle+=diff;
                     else if(targetAngle<angle-diff)
@@ -290,7 +289,6 @@ class AutoPlayer: public Player{
                     else
                         angle = targetAngle;
                 }
-                    cout<<"Power: "<<power<<" "<<targetPower<<endl;
                 if(targetPower <= 1 && targetPower >= 0 && !((power+0.009)>targetPower && (power-0.009)<targetPower)){
                     double diff = abs(targetPower - power)/5.0;
                     if(targetPower>(power+diff))
@@ -314,7 +312,7 @@ class AutoPlayer: public Player{
                 shootTriggered = false;
             Player::updateArrow(p2);
         }
-        void update(){
+        void update(bool first){
             if (health2 > health)
                 health2 -= 0.3;
         }
@@ -370,16 +368,23 @@ class Powerups:public Box{
             }
         }
     }
-    };
+};
+class GamePlayBase{
+    public:
+        int round;
+        GamePlayBase():round(1){}
+        virtual void draw() = 0;
+        virtual void update(bool) = 0;
+        virtual void drawHealthBar() = 0;
+};
 template<class P1, class P2> 
-class GamePlay{
+class GamePlay:public GamePlayBase{
     P1 p1;
     P2 p2;
     Texture Skull;
     vector<Powerups> boxes;
     
 public:
-    int round;
     GamePlay(P1 p1, P2 p2, int nBox) : p1(p1),p2(p2){
         Skull = LoadTexture("assets/crossarrows_skull.png");
         srand(time(0));
@@ -427,7 +432,7 @@ public:
             }
         }
     }
-    void update(){
+    void update(bool firstShoot){
         // CheckCollisionRecs(p2.arrow.position,box1.position);
         int luck = rand() % 3 ;
         if(boxCollision(boxes[0].position,p1.arrow.position,p1.arrow.radius,boxes[0].height,boxes[0].width)){
@@ -462,8 +467,8 @@ public:
             p2.isShooting = false;
             p2.settingUp = true;
         }
-        p1.update();
-        p2.update();
+        p1.update(firstShoot);
+        p2.update(firstShoot);
         p1.updateArrow(p2);
         p2.updateArrow(p1);
     }
@@ -479,27 +484,73 @@ public:
 int main(){
     srand(time(nullptr));
     InitWindow(screenWidth, screenHeight, "ARROW WARS!");
+    TitleScreen s1;
     Menu menu;
     addMenu(menu);
     Player player1({150, screenHeight - 150}, 100,{224, 16, 0, 255}, true, true);
-    Player player2({2 * screenWidth, screenHeight - 150}, 100, {0, 234, 255, 255}, false, false);
-    // AutoPlayer player2({2 * screenWidth, screenHeight - 150}, 100, {0, 234, 255, 255}, false, false, 45, 0.6, 1);
+    bool menuOn = true, menuMouseClick=false, loading= true, single=true;
     Texture2D bg = LoadTexture("back.png");
     Texture2D bottom = LoadTexture("bottom.png");
-    GamePlay<Player, Player> game(player1, player2,2);
-    // GamePlay<Player, AutoPlayer> game(player1, player2, 2);
+    GamePlayBase *game;
+    menu.getItem(0).onClick = [&menuOn, &game,&player1, &single]{
+        _sleep(100);
+        menuOn = false;
+        if(single)
+            game = new GamePlay<Player, AutoPlayer>(player1, AutoPlayer({2 * screenWidth, screenHeight - 150}, 100, {0, 234, 255, 255}, false, false, 45, 0.6, 1), 2);
+        else
+            game = new GamePlay<Player, Player>(player1, Player({2 * screenWidth, screenHeight - 150}, 100, {0, 234, 255, 255}, false, false), 2);
+    };
+    menu.getItem(1).onClick = [&menuOn, &game,&player1, &single, &menu]{
+        cout<<single<<" single"<<endl;
+        if(single)
+            menu.selectMode(single,true);
+        single = true;
+
+        // _sleep(100);
+        // menuOn = false;
+        // game = new GamePlay<Player, AutoPlayer>(player1, AutoPlayer({2 * screenWidth, screenHeight - 150}, 100, {0, 234, 255, 255}, false, false, 45, 0.6, 1), 2);
+
+    };
+    menu.getItem(2).onClick = [&menu, &single]{
+        cout<<single<<" single"<<endl;
+        if(!single)
+            menu.selectMode(single, false);
+        single = false;
+        // _sleep(100);
+        // menuOn = false;
+        // game = new GamePlay<Player, Player>(player1, Player({2 * screenWidth, screenHeight - 150}, 100, {0, 234, 255, 255}, false, false), 2);
+    };
+    menu.getItem(4).onClick = []{
+        cout<<"Options"<<endl;
+    };
+    menu.getItem(4).onClick = []{
+        cout<<"Closing window!"<<endl;
+        CloseWindow();
+        return 0;
+    };
+    Rectangle sourceRec = {0.0f, 0.0f, (float)bg.width, (float)bg.height};
+    Rectangle destRec = {0.0f, 0.0f, (float)screenWidth, (float)screenHeight};
+    DrawTexturePro(bg, sourceRec, destRec, {0,0}, 0.0f, WHITE);
     SetTargetFPS(60);
     while (WindowShouldClose() == false){
-        Rectangle sourceRec = {0.0f, 0.0f, (float)bg.width, (float)bg.height};
-        Rectangle destRec = {0.0f, 0.0f, (float)screenWidth, (float)screenHeight};
-        DrawTexturePro(bg, sourceRec, destRec, {0,0}, 0.0f, WHITE);
-        DrawTexturePro(bottom, sourceRec, destRec, {0,0}, 0.0f, WHITE);
         BeginDrawing();
-        // showMenu(menu);
-        DrawText(TextFormat("Round %i", game.round), screenWidth / 2 - 85, screenHeight / 2 - 300, 50, WHITE);
-        ClearBackground(BLACK);
-        game.draw();
-        game.update();
+        if(loading)
+            loading = s1.draw();
+        else if(menuOn){
+            showMenu(menu);
+            menu.checkMouse();
+        }
+        else{
+            DrawTexturePro(bottom, sourceRec, destRec, {0,0}, 0.0f, WHITE);
+            DrawText(TextFormat("Round %i", game->round), screenWidth / 2 - 85, screenHeight / 2 - 300, 50, WHITE);
+            ClearBackground(BLACK);
+            game->draw();
+            if(!menuMouseClick){
+                game->update(false);
+                menuMouseClick = true;
+            }
+            else game->update(true);
+        }
         EndDrawing();
     }
 
