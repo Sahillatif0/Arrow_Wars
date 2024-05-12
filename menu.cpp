@@ -78,7 +78,7 @@ void addOptionsMenu(OptionsScreen &menu){
     menu.addMenuItem(20,75,1,1,"Resume",{0,.5f*GetScreenHeight()});
     menu.addMenuItem(20,75,1,2,"Restart",{0,.5f*GetScreenHeight()});
     menu.addMenuItem(20,75,1,3,"Sound Off",{0,.5f*GetScreenHeight()});
-    menu.addMenuItem(20,75,1,4,"Save",{0,.5f*GetScreenHeight()});
+    menu.addMenuItem(20,75,1,4,"Exit",{0,.5f*GetScreenHeight()});
 }
 void showOptionsMenu(OptionsScreen &menu){
     menu.draw();
