@@ -53,14 +53,14 @@ void Menu::selectMode(bool single,bool singleClicked){
 void Menu::checkMouse(){
     Vector2 mouse = GetMousePosition();
     for(int i=0; i<menus.size(); i++){
-        if(mouse.x>=menus[i].position.x && mouse.x<=menus[i].position.x+menus[i].width && mouse.y>=menus[i].position.y && mouse.y<=menus[i].position.y+menus[i].height){
+        if(mouse.x>=(menus[i].position.x) && mouse.x<=menus[i].position.x+menus[i].width && mouse.y>=menus[i].position.y && mouse.y<=menus[i].position.y+menus[i].height){
             if(menus[i].scale.x<menus[i].initScale.x+0.05){
                 menus[i].ainmation.y +=0.2;
                 if(menus[i].Nox>1)
                     menus[i].ainmation.x +=0.4;
                 menus[i].scale.x += 0.0008;
                 menus[i].scale.y += 0.0008;
-                if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
+                if(IsMouseButtonDown(MOUSE_LEFT_BUTTON)){
                     menus[i].onClick();
                 }
             }
