@@ -12,6 +12,10 @@
 		"*.js": "javascript",
 		"iostream": "cpp",
 		"cmath": "cpp",
-		"new": "cpp"
+		"new": "cpp",
+		"iosfwd": "cpp",
+		"*.tcc": "cpp",
+		"fstream": "cpp",
+		"ostream": "cpp"
 	}
 }
