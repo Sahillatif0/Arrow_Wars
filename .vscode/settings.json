@@ -7,5 +7,9 @@
 		"**/.DS_Store": true,
 		"**/*.o": true,
 		"**/*.exe": true,
+	},
+	"files.associations": {
+		"iostream": "cpp",
+		"cmath": "cpp"
 	}
 }

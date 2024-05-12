@@ -3,14 +3,39 @@
 #include <cmath>
 #include <vector>
 #include "menu.h"
+#include <cstdlib>
+#include <ctime>
+
 const double gravity = 9.8;
 const int screenWidth = 1800;
 const int screenHeight = 920;
 
 using namespace std;
 
+bool hscircleCollision(Vector2 pos1, Vector2 pos2, int rad1, int rad2){
+    DrawCircle(pos2.x,pos2.y-400,50,WHITE);
+    return (sqrt(pow(pos1.x - pos2.x, 2) + pow(pos1.y - (pos2.y-400), 2)) < rad1 + 30);
+}
 bool circleCollision(Vector2 pos1, Vector2 pos2, int rad1, int rad2){
     return (sqrt(pow(pos1.x - pos2.x, 2) + pow(pos1.y - pos2.y, 2)) < rad1 + rad2);
+}
+bool boxCollision(Vector2 Boxpos, Vector2 arrowPos,int arrowradius, double boxHeight, double boxWidth){
+    float arrowLeft = arrowPos.x - arrowradius*2;
+    float arrowRight = arrowPos.x + arrowradius*2;
+    float arrowTop = arrowPos.y - arrowradius*2;
+    float arrowBottom = arrowPos.y + arrowradius*2;
+    // cout<<"arrow: "<<arrowLeft<<" "<<arrowRight<<" "<<arrowTop<<" "<<arrowBottom<<endl;
+   
+    float boxLeft = Boxpos.x+190;
+    float boxRight = Boxpos.x + boxWidth+190;
+    float boxTop = Boxpos.y+190;
+    float boxBottom = Boxpos.y + boxHeight+190;
+    // cout<<"box: "<<boxLeft<<" "<<boxRight<<" "<<boxTop<<" "<<boxBottom<<endl;
+   
+    if (arrowLeft < boxRight && arrowRight > boxLeft && arrowTop < boxBottom && arrowBottom > boxTop) {
+        return true;  
+    }
+    return false;
 }
 
 class Arrow{
@@ -20,6 +45,7 @@ class Arrow{
     double time, power;
     int moveDir, radius, angle, velocity;
     public:
+    template<class, class> friend class GamePlay;
         friend class Player;
         Arrow(Vector2 pos= {0,0}, Vector2 vel={0,0},int velo=50, int rad=5, int ang=45,int pow=0.6, Color col=RED, int moveDir=1):position(pos),velocity(velo),radius(rad), angle(ang),power(pow),color(col),time(0),moveDir(moveDir),initialVel(vel){
             ball = LoadTexture("assets/ball.png");
@@ -115,12 +141,23 @@ class Player{
                 arrow.draw();
                 arrow.time += 1.0 / 20.0;
                 arrow.move(p2.position.x);
-                if (circleCollision(arrow.position, p2.position, arrow.radius, 300) && ((arrow.moveDir != 1 && p2.isLeft) || (arrow.moveDir == 1 && !p2.isLeft))){
+                if (hscircleCollision(arrow.position, p2.position, arrow.radius, 300) && ((arrow.moveDir != 1 && p2.isLeft) || (arrow.moveDir == 1 && !p2.isLeft))){
+                    cout<<"1"<<endl;
+                    // DrawText("HEADSHOT", screenWidth / 2 - 250, screenHeight / 2 - 30, 100, WHITE);
+                    // ClearBackground(BLACK);
                     arrow.reset();
                     arrow.position = initial;
                     isShooting = false;
                     settingUp = true;
-                    p2.health -= 30;
+                    p2.health -= 80;
+                }
+                if (circleCollision(arrow.position, p2.position, arrow.radius, 300) && ((arrow.moveDir != 1 && p2.isLeft) || (arrow.moveDir == 1 && !p2.isLeft))){
+                    cout<<"2"<<endl;
+                    arrow.reset();
+                    arrow.position = initial;
+                    isShooting = false;
+                    settingUp = true;
+                    p2.health -= 10;
                 }
                 if(p2.health<0)
                     p2.health = 0;
@@ -283,29 +320,63 @@ class AutoPlayer: public Player{
         }
 
 };
+class Powerups;
 class Box{
+    friend class Powerups;
     Vector2 position;
     Texture boxmain;
     double height, width;
     float scale, screenHeightDiff;
     int boxNo;
     public:
+    template<class, class> friend class GamePlay;
     Box(float diff, int n=1):screenHeightDiff(diff),boxNo(n),scale(0.8){
         boxmain = LoadTexture("assets/box.png");
         width = 306*scale, height = 296*scale;
         position.y = float(screenHeight-(0.7)*screenHeightDiff-((boxmain.height*scale)/2+height/2)-((height+5)*(boxNo-1)));
     }
-    void draw(Player p1, Player p2){
+    virtual void draw(Player p1, Player p2)=0;
+};
+class Powerups:public Box{
+    template<class, class> friend class GamePlay;
+    Powerups(float diff, int n=1):Box(diff,n){
+        boxmain = LoadTexture("assets/box.png");
+        width = 306*scale, height = 296*scale;
+        position.y = float(screenHeight-(0.7)*screenHeightDiff-((boxmain.height*scale)/2+height/2)-((height+5)*(boxNo-1)));
+    }
+    void draw(Player p1, Player p2)
+    {
         position.x = (p2.position.x-p1.position.x)/2 + p1.position.x - (boxmain.width*scale)/2;
         DrawTexturePro(boxmain, {0, 0, float(boxmain.width), float(boxmain.height)}, {float(position.x), float(position.y), boxmain.width * scale, boxmain.height * scale}, {0, 0}, 0, WHITE);
     }
-};
+    void randompower(Player &p2){
+        cout<<"1"<<endl;
+        int randomNumber = rand() % 3 + 1;
+        switch (randomNumber){
+            case 1:{
+                cout<<"2"<<endl;
+                p2.health-=30;
+                break;
+            }
+            case 2:{
+                cout<<"3"<<endl;
+                p2.health-=40;
+                break;
+            }
+            case 3:{
+                cout<<"4"<<endl;
+                p2.health-=10000;
+                break;
+            }
+        }
+    }
+    };
 template<class P1, class P2> 
 class GamePlay{
     P1 p1;
     P2 p2;
     Texture Skull;
-    vector<Box> boxes;
+    vector<Powerups> boxes;
     
 public:
     int round;
@@ -313,7 +384,7 @@ public:
         Skull = LoadTexture("assets/crossarrows_skull.png");
         srand(time(0));
         for(int i=0;i<nBox;i++)
-            boxes.push_back(Box(p1.screenDiffPos.y,i+1));
+            boxes.push_back(Powerups(p1.screenDiffPos.y,i+1));
     }
     void drawHealthBar(){
         float healthWidthFactor = (screenWidth / 2 - (10 * 12)) / 200.0, rounded = 1.0;
@@ -358,6 +429,39 @@ public:
     }
     void update(){
         // CheckCollisionRecs(p2.arrow.position,box1.position);
+        int luck = rand() % 3 ;
+        if(boxCollision(boxes[0].position,p1.arrow.position,p1.arrow.radius,boxes[0].height,boxes[0].width)){
+            if(!luck)
+            {boxes[0].randompower(p2);}
+            p1.arrow.reset();
+            p1.arrow.position = p1.initial;
+            p1.isShooting = false;
+            p1.settingUp = true;
+        }
+        if(boxCollision(boxes[1].position,p1.arrow.position,p1.arrow.radius,boxes[1].height,boxes[1].width)){
+            if(!luck)
+            {boxes[1].randompower(p2);}
+            p1.arrow.reset();
+            p1.arrow.position = p1.initial;
+            p1.isShooting = false;
+            p1.settingUp = true;
+        }
+        if(boxCollision(boxes[0].position,p2.arrow.position,p2.arrow.radius,boxes[0].height,boxes[0].width)){
+            if(!luck)
+            {boxes[0].randompower(p1);}
+            p2.arrow.reset();
+            p2.arrow.position = p2.initial;
+            p2.isShooting = false;
+            p2.settingUp = true;
+        }
+        if(boxCollision(boxes[1].position,p2.arrow.position,p2.arrow.radius,boxes[1].height,boxes[1].width)){
+            if(!luck)
+            {boxes[1].randompower(p1);}
+            p2.arrow.reset();
+            p2.arrow.position = p2.initial;
+            p2.isShooting = false;
+            p2.settingUp = true;
+        }
         p1.update();
         p2.update();
         p1.updateArrow(p2);
@@ -373,26 +477,29 @@ public:
 };
 
 int main(){
+    srand(time(nullptr));
     InitWindow(screenWidth, screenHeight, "ARROW WARS!");
     Menu menu;
     addMenu(menu);
     Player player1({150, screenHeight - 150}, 100,{224, 16, 0, 255}, true, true);
     Player player2({2 * screenWidth, screenHeight - 150}, 100, {0, 234, 255, 255}, false, false);
     // AutoPlayer player2({2 * screenWidth, screenHeight - 150}, 100, {0, 234, 255, 255}, false, false, 45, 0.6, 1);
-    // Texture2D bg = LoadTexture("bg.png");
+    Texture2D bg = LoadTexture("back.png");
+    Texture2D bottom = LoadTexture("bottom.png");
     GamePlay<Player, Player> game(player1, player2,2);
     // GamePlay<Player, AutoPlayer> game(player1, player2, 2);
     SetTargetFPS(60);
     while (WindowShouldClose() == false){
-        // Rectangle sourceRec = {0.0f, 0.0f, (float)bg.width, (float)bg.height};
-        // Rectangle destRec = {0.0f, 0.0f, (float)screenWidth, (float)screenHeight};
-        // DrawTexturePro(bg, sourceRec, destRec, {0,0}, 0.0f, WHITE);
+        Rectangle sourceRec = {0.0f, 0.0f, (float)bg.width, (float)bg.height};
+        Rectangle destRec = {0.0f, 0.0f, (float)screenWidth, (float)screenHeight};
+        DrawTexturePro(bg, sourceRec, destRec, {0,0}, 0.0f, WHITE);
+        DrawTexturePro(bottom, sourceRec, destRec, {0,0}, 0.0f, WHITE);
         BeginDrawing();
         // showMenu(menu);
         DrawText(TextFormat("Round %i", game.round), screenWidth / 2 - 85, screenHeight / 2 - 300, 50, WHITE);
         ClearBackground(BLACK);
-        game.update();
         game.draw();
+        game.update();
         EndDrawing();
     }
 
