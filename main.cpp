@@ -2,7 +2,7 @@
 #include <raylib.h>
 #include <cmath>
 #include <vector>
-
+#include "menu.h"
 const double gravity = 9.8;
 const int screenWidth = 1800;
 const int screenHeight = 920;
@@ -374,18 +374,21 @@ public:
 
 int main(){
     InitWindow(screenWidth, screenHeight, "ARROW WARS!");
+    Menu menu;
+    addMenu(menu);
     Player player1({150, screenHeight - 150}, 100,{224, 16, 0, 255}, true, true);
-    // Player player2({2 * screenWidth, screenHeight - 150}, 100, {0, 234, 255, 255}, false, false);
-    AutoPlayer player2({2 * screenWidth, screenHeight - 150}, 100, {0, 234, 255, 255}, false, false, 45, 0.6, 1);
+    Player player2({2 * screenWidth, screenHeight - 150}, 100, {0, 234, 255, 255}, false, false);
+    // AutoPlayer player2({2 * screenWidth, screenHeight - 150}, 100, {0, 234, 255, 255}, false, false, 45, 0.6, 1);
     // Texture2D bg = LoadTexture("bg.png");
-    // GamePlay<Player, Player> game(player1, player2);
-    GamePlay<Player, AutoPlayer> game(player1, player2, 2);
+    GamePlay<Player, Player> game(player1, player2,2);
+    // GamePlay<Player, AutoPlayer> game(player1, player2, 2);
     SetTargetFPS(60);
     while (WindowShouldClose() == false){
         // Rectangle sourceRec = {0.0f, 0.0f, (float)bg.width, (float)bg.height};
         // Rectangle destRec = {0.0f, 0.0f, (float)screenWidth, (float)screenHeight};
         // DrawTexturePro(bg, sourceRec, destRec, {0,0}, 0.0f, WHITE);
         BeginDrawing();
+        // showMenu(menu);
         DrawText(TextFormat("Round %i", game.round), screenWidth / 2 - 85, screenHeight / 2 - 300, 50, WHITE);
         ClearBackground(BLACK);
         game.update();
