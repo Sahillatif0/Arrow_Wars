@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <ctime>
 #include "titlescreen.h"
+#include <fstream>
 
 const double gravity = 9.8;
 const int screenWidth = 1800;
@@ -36,6 +37,57 @@ bool boxCollision(Vector2 Boxpos, Vector2 arrowPos,int arrowradius, double boxHe
     }
     return false;
 }
+class data{
+    int health1;
+    int health2;
+    bool isLeft;
+    public:
+    int geth1(){
+        return health1;
+    }
+    int geth2(){
+        return health2;
+    }
+    bool getisleft(){
+        return isLeft;
+    }
+    void seth1(int a){
+        health1=a;
+    }
+    void seth2(int a){
+        health2=a;
+    }
+    void setil(bool a){
+        isLeft=a;
+    }
+    void savedata()
+    {
+        ofstream outfile;
+        outfile.open("playerdata.txt");
+        outfile << health1<<endl<<health2<<endl<<isLeft;
+        outfile.close();
+    }
+    void readdata()
+    {
+        ifstream infile;
+        infile.open("playerdata.txt");
+        for(int i = 0 ; i<3;i++)
+        {
+            if(i==0)
+            {infile >> health1;}
+            if(i==1){
+                infile >>health2;}
+            if(i==3){
+                bool a;
+                infile>>a;
+                if(a==1||a==0)
+                {isLeft=a;}
+            }
+        }
+        infile.close();
+    }
+};
+
 class Arrow{
     Vector2 position, initialVel;
     Color color;
@@ -385,6 +437,7 @@ class GamePlay:public GamePlayBase{
     P2 p2;
     Texture Skull, pause;
     vector<Powerups> boxes;
+    data a;
     OptionsScreen opMenu;
     bool options, menuOn, frShoot;
     int fps;
@@ -465,6 +518,11 @@ public:
         }
     }
     void update(bool firstShoot){
+        a.seth1(p1.health);
+        a.seth2(p2.health);
+        if(p1.turn==1||p1.turn==0)
+       { a.setil(p1.turn);}
+        a.savedata();
         fps++;
         fps%=60;
         if(!options){
@@ -534,23 +592,28 @@ public:
 };
 
 int main(){
+    data d;
+    d.readdata();
+    int h1 = d.geth1();
+    int h2 = d.geth2();
+    bool il = d.getisleft();
     srand(time(nullptr));
     InitWindow(screenWidth, screenHeight, "ARROW WARS!");
     TitleScreen s1;
     Menu menu;
     addMenu(menu);
-    Player player1({150, screenHeight - 150}, 100,{224, 16, 0, 255}, true, true);
+    Player player1({150, screenHeight - 150}, h1,{224, 16, 0, 255}, true, true);
     bool menuOn = true, menuMouseClick=false, loading= true, single=true;
     Texture2D bg = LoadTexture("back.png");
     Texture2D bottom = LoadTexture("bottom.png");
     GamePlayBase *game;
-    menu.getItem(0).onClick = [&menuOn, &game,&player1, &single]{
+    menu.getItem(0).onClick = [&menuOn, &game,&player1, &single,&h1,&h2,&il]{
         _sleep(100);
         menuOn = false;
         if(single)
-            game = new GamePlay<Player, AutoPlayer>(player1, AutoPlayer({2 * screenWidth, screenHeight - 150}, 100, {0, 234, 255, 255}, false, false, 45, 0.6, 1), 2);
+            game = new GamePlay<Player, AutoPlayer>(player1, AutoPlayer({2 * screenWidth, screenHeight - 150}, h2, {0, 234, 255, 255}, false, false, 45, 0.6, 1), 2);
         else
-            game = new GamePlay<Player, Player>(player1, Player({2 * screenWidth, screenHeight - 150}, 100, {0, 234, 255, 255}, false, false), 2);
+            game = new GamePlay<Player, Player>(player1, Player({2 * screenWidth, screenHeight - 150}, h2, {0, 234, 255, 255}, false, false), 2);
     };
     menu.getItem(1).onClick = [&menuOn, &game,&player1, &single, &menu]{
         cout<<single<<" single"<<endl;
