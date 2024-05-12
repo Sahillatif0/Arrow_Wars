@@ -3,33 +3,52 @@
 #include<vector>
 #include"menu.h"
 using namespace std;
-int MenuScreenWidth = 1800;
-int MenuScreenHeight = 920;
-MenuItem::MenuItem(int height, int width, int Nox, int Noy, string text, Vector2 position, Texture woodie):height(height), width(width), Nox(Nox),Noy(Noy), text(text), initPosition(position), woodie(woodie), ainmation({0,0}){
-    initScale.x = width/400.0, initScale.y = height/100.0;
-    scale = initScale;
+MenuItem::MenuItem(int height, int width, int Nox, int Noy, string text, Vector2 position, Texture woodie):height(height), width(width), Nox(Nox),Noy(Noy), text(text), initPosition(position), woodie(woodie), ainmation({0,0}), cainmation({0,0}){
+    initScale.x = (width/400.0)*1.5, initScale.y = (height/100.0)*1.5;
+    scale = inScale = initScale;
+    if(text=="Singleplayer"){
+        inScale.x = 2*initScale.x/3;
+        inScale.y = 2*initScale.y/3;
+        cainmation = {0,50};
+    }
 }
 void MenuItem::draw(){
-    width = woodie.width*scale.x, height = woodie.height*scale.y;
-    position.x = float (MenuScreenWidth/2.0f - woodie.width*scale.x/2.0f + (Nox-1)*(woodie.width*scale.x+10) - initPosition.x) - ainmation.x;
-    position.y = float (initPosition.y+woodie.height*scale.y*(Noy - 1)) - ainmation.y;
+    width = (woodie.width-350)*scale.x, height = (woodie.height-125)*scale.y;
+    position.x = float (GetScreenWidth()/2.0f - woodie.width*scale.x/2.0f + (Nox-1)*((woodie.width-250)*scale.x) - initPosition.x) - ainmation.x + cainmation.x;
+    position.y = float (initPosition.y+(woodie.height-125)*scale.y*(Noy - 1)) - ainmation.y + 100 - 62.5 + cainmation.y;
     DrawTexturePro(woodie, {0,0,float (woodie.width),float (woodie.height)}, {position.x,position.y, float(woodie.width * scale.x),float(woodie.height * scale.y)},{0,0},0,WHITE);
     DrawText(text.c_str(), position.x+((woodie.width*scale.x/2.0)-MeasureText(text.c_str(), 100*scale.y)/2.0f), position.y+((woodie.height-80)*scale.y/2.0f), 100*scale.y, WHITE);
 }
-Menu::Menu(){
-    woodie = LoadTexture("assets/woodie_menu1.png");
-    bg = LoadTexture("assets/bg1.png");
+Menu::Menu():titleScale(0.37){
+    woodie = LoadTexture("assets/woodie_menu3.png");
+    bg = LoadTexture("assets/bg2.png");
+    title = LoadTexture("assets/title.png");
 }
 void Menu::addMenuItem(int height, int width, int Nox,int Noy, string text, Vector2 position){
     menus.push_back(MenuItem(height, width, Nox, Noy, text, position, woodie));
 }
 void Menu::draw(){
+    DrawTexturePro(bg,{0,0,float(bg.width), float(bg.height)},{0,0,GetScreenWidth()*1.0f,GetScreenHeight()*1.0f},{0,0},0,WHITE);
+    DrawTexturePro(title,{0,0,float(title.width),float(title.height)}, {float(GetScreenWidth()/2 - (titleScale*title.width)/2), float(GetScreenHeight()/2 - 1.6f*(0.24/titleScale)*titleScale*title.height),titleScale*float(title.width),titleScale*float(title.height)},{0,0},0, WHITE);
     for(int i=0; i<menus.size(); i++){
         menus[i].draw();
     }
 }
-void Menu::selectItem(int No){
-    cout<<"Selected Item: "<<No<<endl;
+void Menu::selectMode(bool single,bool singleClicked){
+    if(singleClicked){
+        menus[1].inScale.x = (2*menus[1].initScale.x/3);
+        menus[1].inScale.y = (2*menus[1].initScale.y/3);
+        menus[1].cainmation = {0,50};
+        menus[2].cainmation = {0,0};
+        menus[2].inScale = menus[2].initScale;
+    }
+    else{
+        menus[2].inScale.x = (2*menus[2].initScale.x/3);
+        menus[2].inScale.y = (2*menus[2].initScale.y/3);
+        menus[2].cainmation = {90,50};
+        menus[1].cainmation = {0,0};
+        menus[1].inScale = menus[1].initScale;
+    }
 }
 void Menu::checkMouse(){
     Vector2 mouse = GetMousePosition();
@@ -41,36 +60,29 @@ void Menu::checkMouse(){
                     menus[i].ainmation.x +=0.4;
                 menus[i].scale.x += 0.0008;
                 menus[i].scale.y += 0.0008;
+                if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
+                    menus[i].onClick();
+                }
             }
         }
         else{
-            menus[i].scale = menus[i].initScale;
-            menus[i].ainmation = {0,0};
+            menus[i].scale = menus[i].inScale;
+                menus[i].ainmation = {0,0};
         }
     }
 }
+MenuItem& Menu::getItem(int i){
+    return menus[i];
+
+}
 void addMenu(Menu &menu){
-    menu.addMenuItem(40, 160, 1,1, "Play", {0, MenuScreenHeight/3.0f +  100});
-    menu.addMenuItem(20, 75, 1,2, "Singleplayer", {95, MenuScreenHeight/3.0f + 160});
-    menu.addMenuItem(20, 75, 2,2, "Multiplayer", {95, MenuScreenHeight/3.0f + 160});
-    menu.addMenuItem(20, 75, 1,3, "Options", {95, MenuScreenHeight/3.0f + 170});
-    menu.addMenuItem(20, 75, 2,3, "Exit", {95, MenuScreenHeight/3.0f + 170});
+    menu.addMenuItem(40, 160, 1,1, "Play", {0, GetScreenHeight()/3.0f +  100});
+    menu.addMenuItem(20, 75, 1,2, "Singleplayer", {150, GetScreenHeight()/3.0f + 210});
+    menu.addMenuItem(20, 75, 2,2, "Multiplayer", {150, GetScreenHeight()/3.0f + 210});
+    menu.addMenuItem(20, 75, 1,3, "Options", {150, GetScreenHeight()/3.0f + 220});
+    menu.addMenuItem(20, 75, 2,3, "Exit", {150, GetScreenHeight()/3.0f + 220});
 }
 void showMenu(Menu &menu){
-    DrawTexturePro(menu.bg,{0,0,float(menu.bg.width), float(menu.bg.height)},{0,0,MenuScreenWidth*1.0f,MenuScreenHeight*1.0f},{0,0},0,WHITE);
-    DrawText("ARROW WARS", MenuScreenWidth/2.0f - MeasureText("ARROW WARS", 100)/2.0f,180,100,WHITE);
     menu.draw();
     menu.checkMouse();
 }
-// int main() {
-//     InitWindow(MenuScreenWidth, MenuScreenHeight, "Menu");
-//     Menu menu;
-//     addMenu(menu);
-//     while(!WindowShouldClose()){
-//         BeginDrawing();
-//         showMenu(menu);
-//         EndDrawing();
-//     }
-//     CloseWindow();
-//     return 0;
-// }
