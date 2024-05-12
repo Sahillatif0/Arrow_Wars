@@ -25,13 +25,11 @@ bool boxCollision(Vector2 Boxpos, Vector2 arrowPos,int arrowradius, double boxHe
     float arrowRight = arrowPos.x + arrowradius*2;
     float arrowTop = arrowPos.y - arrowradius*2;
     float arrowBottom = arrowPos.y + arrowradius*2;
-    // cout<<"arrow: "<<arrowLeft<<" "<<arrowRight<<" "<<arrowTop<<" "<<arrowBottom<<endl;
    
     float boxLeft = Boxpos.x+190;
     float boxRight = Boxpos.x + boxWidth+190;
     float boxTop = Boxpos.y+190;
     float boxBottom = Boxpos.y + boxHeight+190;
-    // cout<<"box: "<<boxLeft<<" "<<boxRight<<" "<<boxTop<<" "<<boxBottom<<endl;
    
     if (arrowLeft < boxRight && arrowRight > boxLeft && arrowTop < boxBottom && arrowBottom > boxTop) {
         return true;  
@@ -56,13 +54,10 @@ class Arrow{
             position.y = y;
         }
         void draw(){
-
-        // DrawCircle(position.x, position.y, radius, color);
         DrawTexturePro(ball, {0, 0, float(ball.width), float(ball.height)}, {position.x, position.y, ball.width * 0.1f, ball.height * 0.1f}, {0, 0}, angle, WHITE);
     }
     void move(int x){
         if (((position.x < screenWidth / 2 || (x > (screenWidth - 150) && x < ((screenWidth - 150) + initialVel.x))) && moveDir == 1) || ((position.x > screenWidth / 2 || (x < 150 && x > (150 - initialVel.x))) && moveDir == -1))
-            // cout<<"posX: "<<position.x<<" posy: "<<position.y<<" t: "<<time<<endl;
             position.x += moveDir * (velocity*power* 0.5* cos((angle * PI) / 180.0));
             position.y -= (velocity* power * sin((angle * PI) / 180.0) - 0.5 * gravity * time * time);
     }
@@ -433,7 +428,6 @@ public:
         }
     }
     void update(bool firstShoot){
-        // CheckCollisionRecs(p2.arrow.position,box1.position);
         int luck = rand() % 3 ;
         if(boxCollision(boxes[0].position,p1.arrow.position,p1.arrow.radius,boxes[0].height,boxes[0].width)){
             if(!luck)
@@ -505,20 +499,12 @@ int main(){
         if(single)
             menu.selectMode(single,true);
         single = true;
-
-        // _sleep(100);
-        // menuOn = false;
-        // game = new GamePlay<Player, AutoPlayer>(player1, AutoPlayer({2 * screenWidth, screenHeight - 150}, 100, {0, 234, 255, 255}, false, false, 45, 0.6, 1), 2);
-
     };
     menu.getItem(2).onClick = [&menu, &single]{
         cout<<single<<" single"<<endl;
         if(!single)
             menu.selectMode(single, false);
         single = false;
-        // _sleep(100);
-        // menuOn = false;
-        // game = new GamePlay<Player, Player>(player1, Player({2 * screenWidth, screenHeight - 150}, 100, {0, 234, 255, 255}, false, false), 2);
     };
     menu.getItem(4).onClick = []{
         cout<<"Options"<<endl;
