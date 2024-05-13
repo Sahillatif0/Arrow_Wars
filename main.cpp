@@ -70,7 +70,7 @@ class data{
     {
         ofstream outfile;
         outfile.open("playerdata.txt");
-        outfile << health1<<endl<<health2<<endl<<isLeft<<round;
+        outfile << health1<<endl<<health2<<endl<<round;
         outfile.close();
     }
     void readdata()
@@ -84,12 +84,6 @@ class data{
             if(i==1){
                 infile >>health2;}
             if(i==2){
-                bool a;
-                infile>>a;
-                if(a==1||a==0)
-                {isLeft=a;}
-            }
-            if(i==3){
                 infile>>round;
             }
         }
@@ -668,11 +662,12 @@ int main(){
     menu.getItem(3).onClick = [&menuOn, &game,&player1, &single,&h1,&h2,&il,&d]{
         _sleep(100);
         menuOn = false;
-        game->round = d.getround();
         if(single)
-            game = new GamePlay<Player, AutoPlayer>(Player({150, screenHeight - 150}, 100,{224, 16, 0, 255}, true, true), AutoPlayer({2 * screenWidth, screenHeight - 150}, h2, {0, 234, 255, 255}, false, false, 45, 0.6, 1), 2);
+           { game = new GamePlay<Player, AutoPlayer>(Player({150, screenHeight - 150}, h1,{224, 16, 0, 255}, true, true), AutoPlayer({2 * screenWidth, screenHeight - 150}, h2, {0, 234, 255, 255}, false, false, 45, 0.6, 1), 2);
+            (*game).round=d.getround();}
         else
-            game = new GamePlay<Player, Player>(Player({150, screenHeight - 150}, 100,{224, 16, 0, 255}, true, true), Player({2 * screenWidth, screenHeight - 150}, h2, {0, 234, 255, 255}, false, false), 2);
+           { game = new GamePlay<Player, Player>(Player({150, screenHeight - 150}, h1,{224, 16, 0, 255}, true, true), Player({2 * screenWidth, screenHeight - 150}, h2, {0, 234, 255, 255}, false, false), 2);
+            (*game).round=d.getround();}
     };
     menu.getItem(4).onClick = []{
         cout<<"Closing window!"<<endl;
