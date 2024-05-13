@@ -39,8 +39,7 @@ bool boxCollision(Vector2 Boxpos, Vector2 arrowPos,int arrowradius, double boxHe
     return false;
 }
 class data{
-    int health1;
-    int health2;
+    int health1, health2, round;
     bool isLeft;
     public:
     int geth1(){
@@ -48,6 +47,9 @@ class data{
     }
     int geth2(){
         return health2;
+    }
+    int getround(){
+        return round;
     }
     bool getisleft(){
         return isLeft;
@@ -61,28 +63,34 @@ class data{
     void setil(bool a){
         isLeft=a;
     }
+    void setround(int r){
+        round = r;
+    }
     void savedata()
     {
         ofstream outfile;
         outfile.open("playerdata.txt");
-        outfile << health1<<endl<<health2<<endl<<isLeft;
+        outfile << health1<<endl<<health2<<endl<<isLeft<<round;
         outfile.close();
     }
     void readdata()
     {
         ifstream infile;
         infile.open("playerdata.txt");
-        for(int i = 0 ; i<3;i++)
+        for(int i = 0 ; i<4;i++)
         {
             if(i==0)
             {infile >> health1;}
             if(i==1){
                 infile >>health2;}
-            if(i==3){
+            if(i==2){
                 bool a;
                 infile>>a;
                 if(a==1||a==0)
                 {isLeft=a;}
+            }
+            if(i==3){
+                infile>>round;
             }
         }
         infile.close();
@@ -205,7 +213,7 @@ class Player{
                     arrow.position = initial;
                     isShooting = false;
                     settingUp = true;
-                    p2.health -= 10;
+                    p2.health -= 20;
                 }
                 if(p2.health<0)
                     p2.health = 0;
@@ -441,7 +449,7 @@ class GamePlayBase{
         virtual void update(bool) = 0;
         virtual void drawHealthBar() = 0;
         virtual bool getMenuOn() = 0;
-        virtual bool checkWin() = 0;
+        virtual void checkWin() = 0;
 };
 template<class P1, class P2> 
 class GamePlay:public GamePlayBase{
@@ -476,7 +484,8 @@ public:
             boxes.push_back(Powerups(p1.screenDiffPos.y,i+1));
     }
     void operator++(){
-        round++;
+        // round++;
+        cout<<"printtttttttttttttttttttttttttttttttttt"<<endl;
     }
     void restartGame(){
         p1.health = 100;
@@ -504,7 +513,7 @@ public:
         Rectangle destRec = {float((screenWidth / 2) - Skull.width * 0.125), 30.0f, Skull.width * 0.25f, Skull.height * 0.25f};
         DrawTexturePro(Skull, sourceRec, destRec, {0, 0}, 0.0f, WHITE);
         }
-        bool checkWin(){
+        void checkWin(){
         if (p1.health <= 0 || p2.health <= 0 || p1.health2 <= 0 || p2.health2 <= 0){
             if (p1.health <= 0 || p1.health2 <= 0){
                 DrawText("BLUE WINS", screenWidth / 2 - 250, screenHeight / 2 - 30, 100, WHITE);
@@ -516,8 +525,8 @@ public:
                     p1.health2 = 100;
                     p2.health = 100;
                     p2.health2 = 100;
-
-                    return true;
+                    ++round;
+                    return ;
                 }
             }
             else{
@@ -530,16 +539,17 @@ public:
                     p1.health2 = 100;
                     p2.health = 100;
                     p2.health2 = 100;
-
-                    return true;
+                    ++round;
+                    return;
                 }
             }
         }
-        return false;
+        return ;
     }
     void update(bool firstShoot){
         a.seth1(p1.health);
         a.seth2(p2.health);
+        a.setround(round);
         if(p1.turn==1||p1.turn==0)
        { a.setil(p1.turn);}
         a.savedata();
@@ -601,6 +611,7 @@ public:
         p2.updateArrow(p1);
         if(!frShoot && fps%59==0)
             frShoot = true;
+        checkWin();
         }
     }
     void draw(){
@@ -629,18 +640,18 @@ int main(){
     TitleScreen s1;
     Menu menu;
     addMenu(menu);
-    Player player1({150, screenHeight - 150}, h1,{224, 16, 0, 255}, true, true);
+    Player player1({150, screenHeight - 150}, 100,{224, 16, 0, 255}, true, true);
     bool menuOn = true, menuMouseClick=false, loading= true, single=true;
     Texture2D bg = LoadTexture("back.png");
     Texture2D bottom = LoadTexture("bottom.png");
     GamePlayBase *game;
-    menu.getItem(0).onClick = [&menuOn, &game,&player1, &single,&h1,&h2,&il]{
+    menu.getItem(0).onClick = [&menuOn, &game,&player1, &single]{
         _sleep(100);
         menuOn = false;
         if(single)
-            game = new GamePlay<Player, AutoPlayer>(player1, AutoPlayer({2 * screenWidth, screenHeight - 150}, h2, {0, 234, 255, 255}, false, false, 45, 0.6, 1), 2);
+            game = new GamePlay<Player, AutoPlayer>(player1, AutoPlayer({2 * screenWidth, screenHeight - 150}, 100, {0, 234, 255, 255}, false, false, 45, 0.6, 1), 2);
         else
-            game = new GamePlay<Player, Player>(player1, Player({2 * screenWidth, screenHeight - 150}, h2, {0, 234, 255, 255}, false, false), 2);
+            game = new GamePlay<Player, Player>(player1, Player({2 * screenWidth, screenHeight - 150}, 100, {0, 234, 255, 255}, false, false), 2);
     };
     menu.getItem(1).onClick = [&menuOn, &game,&player1, &single, &menu]{
         cout<<single<<" single"<<endl;
@@ -654,8 +665,14 @@ int main(){
             menu.selectMode(single, false);
         single = false;
     };
-    menu.getItem(3).onClick = []{
-        cout<<"Options"<<endl;
+    menu.getItem(3).onClick = [&menuOn, &game,&player1, &single,&h1,&h2,&il,&d]{
+        _sleep(100);
+        menuOn = false;
+        game->round = d.getround();
+        if(single)
+            game = new GamePlay<Player, AutoPlayer>(Player({150, screenHeight - 150}, 100,{224, 16, 0, 255}, true, true), AutoPlayer({2 * screenWidth, screenHeight - 150}, h2, {0, 234, 255, 255}, false, false, 45, 0.6, 1), 2);
+        else
+            game = new GamePlay<Player, Player>(Player({150, screenHeight - 150}, 100,{224, 16, 0, 255}, true, true), Player({2 * screenWidth, screenHeight - 150}, h2, {0, 234, 255, 255}, false, false), 2);
     };
     menu.getItem(4).onClick = []{
         cout<<"Closing window!"<<endl;
@@ -687,8 +704,6 @@ int main(){
                 menuMouseClick = true;
             }
             else game->update(true);
-          if(game->checkWin())
-        ++game;
         }
         EndDrawing();
     }
