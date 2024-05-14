@@ -69,14 +69,31 @@ class data{
     void savedata()
     {
         ofstream outfile;
-        outfile.open("playerdata.txt");
+        try{
+            outfile.open("playerdata.txt");
+            if(!outfile.is_open()){
+                throw "File not opened";
+            }
+        }
+        catch(string err){
+            cout<<err;
+        }
         outfile << health1<<endl<<health2<<endl<<round;
         outfile.close();
     }
     void readdata()
     {
         ifstream infile;
-        infile.open("playerdata.txt");
+        try{
+            infile.open("playerdata.txt");
+            if(!infile.is_open()){
+                throw "File not opened";
+            }
+        }
+        catch(string err){
+            cout<<err;
+        }
+        
         for(int i = 0 ; i<4;i++)
         {
             if(i==0)
