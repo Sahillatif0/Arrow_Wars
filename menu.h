@@ -20,6 +20,7 @@ class MenuItem{
         void draw();
         Vector2 getInitScale(){return initScale;}
         function<void()> onClick;
+        void setText(string t){text = t;}
 };
 class Menu{
     vector<MenuItem> menus;

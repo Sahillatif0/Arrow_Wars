@@ -356,6 +356,8 @@ class AutoPlayer: public Player{
                     mouseDown = false;
                     turnPlayed = true;
                     shoot();
+                    Sound throwS = LoadSound("throw.mp3");
+                    PlaySound(throwS);
                     targetSet = false;
                     shootTriggered = true;
                 }
@@ -378,9 +380,10 @@ class Box{
     double height, width;
     float scale, screenHeightDiff;
     int boxNo;
+    bool sound;
     public:
     template<class, class> friend class GamePlay;
-    Box(float diff, int n=1):screenHeightDiff(diff),boxNo(n),scale(0.8){
+    Box(float diff, int n=1):screenHeightDiff(diff),boxNo(n),scale(0.8), sound(true){
         boxmain = LoadTexture("assets/box.png");
         width = 306*scale, height = 296*scale;
         position.y = float(screenHeight-(0.7)*screenHeightDiff-((boxmain.height*scale)/2+height/2)-((height+5)*(boxNo-1)));
@@ -388,6 +391,7 @@ class Box{
     virtual void draw(Player p1, Player p2)=0;
 };
 class Powerups:public Box{
+    public:
     template<class, class> friend class GamePlay;
     Powerups(float diff, int n=1):Box(diff,n){
         boxmain = LoadTexture("assets/box.png");
@@ -403,35 +407,37 @@ class Powerups:public Box{
         cout<<"1"<<endl;
         int randomNumber = rand() % 6 + 1;
         switch (randomNumber){
-            case 1:{
-                cout<<"2"<<endl;
+            case 1:
                 p2.health-=30;
+                if(sound){
                 Sound boxHit = LoadSound("box_hit.mp3");
                 PlaySound(boxHit);
+                }
                 break;
-            }
-            case 2:{
-                cout<<"3"<<endl;
+            case 2:
                 p2.health-=40;
+                if(sound){
                 Sound boxHit = LoadSound("box_hit.mp3");
                 PlaySound(boxHit);
+                }
                 break;
-            }
-            case 3:{
+            case 3:
                 cout<<"4"<<endl;
+                if(sound){
                 Sound boxHit = LoadSound("fatality.mp3");
                 PlaySound(boxHit);
+                }
                 if(p2.health<90)
                     p2.health+=10;
                 break;
-            }
-            case 4:{
-                cout<<"5"<<endl;
+            case 4:
+                if(sound){
                 Sound boxHit = LoadSound("box_hit.mp3");
+                PlaySound(boxHit);
+                }
                 if(p2.health<80)
                     p2.health+=20;
                 break;
-            }
         }
     }
 };
@@ -453,10 +459,10 @@ class GamePlay:public GamePlayBase{
     vector<Powerups> boxes;
     data a;
     OptionsScreen opMenu;
-    bool options, menuOn, frShoot;
+    bool options, menuOn, frShoot, sound;
     int fps;
 public:
-    GamePlay(P1 p1, P2 p2, int nBox) : p1(p1),p2(p2),options(false), menuOn(false),frShoot(true){
+    GamePlay(P1 p1, P2 p2, int nBox) : p1(p1),p2(p2),options(false), menuOn(false),frShoot(true), sound(true){
         addOptionsMenu(opMenu);
         opMenu.getItem(0).onClick = [this]{
             this->options = false;
@@ -470,6 +476,10 @@ public:
         
         opMenu.getItem(2).onClick = [this]{
             this->soundOnOff();
+        };
+        opMenu.getItem(3).onClick = [this]{
+           CloseWindow();
+           exit(0);
         };
         Skull = LoadTexture("assets/crossarrows_skull.png");
         pause = LoadTexture("assets/pause2.png");
@@ -488,9 +498,16 @@ public:
         round = 1;
     }
     void soundOnOff(){
-        // else
-        cout<<"Stop Sound"<<endl;
-        //     PlaySound(LoadSound("assets/arrow.wav"));
+        if(sound){
+            opMenu.getItem(2).setText("Sound On");
+            sound = 0;
+        }
+        else{
+            opMenu.getItem(2).setText("Sound Off");
+            sound = 1;
+        }
+
+
     }
     bool getMenuOn(){return menuOn;}
     void drawHealthBar(){
@@ -557,8 +574,10 @@ public:
             p1.arrow.position = p1.initial;
             p1.isShooting = false;
             p1.settingUp = true;
+            if(sound){
             Sound wall = LoadSound("wall_hit.mp3");
             PlaySound(wall);
+            }
             
         }
         if(boxCollision(boxes[1].position,p1.arrow.position,p1.arrow.radius,boxes[1].height,boxes[1].width)){
@@ -568,8 +587,10 @@ public:
             p1.arrow.position = p1.initial;
             p1.isShooting = false;
             p1.settingUp = true;
+            if(sound){
             Sound wall = LoadSound("wall_hit.mp3");
             PlaySound(wall);
+            }
         }
         if(boxCollision(boxes[0].position,p2.arrow.position,p2.arrow.radius,boxes[0].height,boxes[0].width)){
             if(!luck)
@@ -578,8 +599,10 @@ public:
             p2.arrow.position = p2.initial;
             p2.isShooting = false;
             p2.settingUp = true;
+            if(sound){
             Sound wall = LoadSound("wall_hit.mp3");
             PlaySound(wall);
+            }
         }
         if(boxCollision(boxes[1].position,p2.arrow.position,p2.arrow.radius,boxes[1].height,boxes[1].width)){
             if(!luck)
@@ -588,8 +611,10 @@ public:
             p2.arrow.position = p2.initial;
             p2.isShooting = false;
             p2.settingUp = true;
+            if(sound){
             Sound wall = LoadSound("wall_hit.mp3");
             PlaySound(wall);
+            }
         }
         if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && GetMousePosition().y<150){
             if(GetMousePosition().x>screenWidth-130 && GetMousePosition().x<screenWidth-30 && GetMousePosition().y>50 && GetMousePosition().y<150){
