@@ -478,8 +478,7 @@ public:
             boxes.push_back(Powerups(p1.screenDiffPos.y,i+1));
     }
     void operator++(){
-        // round++;
-        cout<<"printtttttttttttttttttttttttttttttttttt"<<endl;
+        round++;
     }
     void restartGame(){
         p1.health = 100;
@@ -519,7 +518,7 @@ public:
                     p1.health2 = 100;
                     p2.health = 100;
                     p2.health2 = 100;
-                    ++round;
+                    ++(*this);
                     return ;
                 }
             }
@@ -533,7 +532,7 @@ public:
                     p1.health2 = 100;
                     p2.health = 100;
                     p2.health2 = 100;
-                    ++round;
+                    ++(*this);
                     return;
                 }
             }
