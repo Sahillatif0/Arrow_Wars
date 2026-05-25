@@ -3,6 +3,7 @@
 #include <cmath>
 #include <vector>
 #include <memory>
+#include <string>
 #include "menu.h"
 #include "constants.h"
 #include "sound_manager.h"
@@ -77,7 +78,7 @@ class data{
             }
         }
         catch(string err){
-            cout<<err;
+            }
         }
         outfile << health1<<endl<<health2<<endl<<round;
         outfile.close();
@@ -92,7 +93,6 @@ class data{
             }
         }
         catch(string err){
-            cout<<err;
         }
         
         for(int i = 0 ; i<4;i++)
@@ -202,11 +202,9 @@ class Player{
                 for (int i = 30; i > 0; i--){
                     DrawCircle(x, y, (5 - 5*float(i / 30)), Fade(color, power * 0.03 * i + 0.25));
                     time += 1/20.0;
-                    // cout<<"y: "<<y<<" x:"<<x<<" TIME: "<<time<<endl;
                     y -= (velocity* power * sin((angle * PI) / 180.0) - 0.5 * GRAVITY * time * time);
                     x += sign * 0.5* (velocity*power * cos((angle * PI) / 180.0));
                 }
-                cout<<endl<<endl<<endl;
             }
             drawText();
         }
@@ -247,12 +245,12 @@ class Player{
                     isShooting = false;
                     settingUp = true;
                     p2.health -= HEADSHOT_DAMAGE;
-                    soundManager.play("hitting");
+                    g_soundManager.play("hitting");
                     g_aiLearning.recordPlayerShot(angle, power, HEADSHOT_DAMAGE, true);
                 }
                 if (circleCollision(arrow.position, p2.position, arrow.radius, 300) && ((arrow.moveDir != 1 && p2.isLeft) || (arrow.moveDir == 1 && !p2.isLeft))){
                     p2.triggerHit();
-                    soundManager.play("hitting");
+                    g_soundManager.play("hitting");
                     arrow.reset();
                     arrow.position = initial;
                     isShooting = false;
@@ -355,7 +353,7 @@ class Player{
             }
             if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && turn && firstShoot && GetMousePosition().y>150){
                 shoot();
-                soundManager.play("throw");
+                g_soundManager.play("throw");
                 mouseDown = false;
                 turnPlayed = true;
                 g_aiLearning.recordPlayerShot(angle, power, 0, false);
@@ -425,7 +423,7 @@ public:
                     mouseDown = false;
                     turnPlayed = true;
                     shoot();
-                    g_soundManager.play("throw");
+                    g_g_soundManager.play("throw");
                     myShotsFired++;
                     targetSet = false;
                     shootTriggered = true;
@@ -481,19 +479,19 @@ class Powerups:public Box{
         switch (randomNumber){
             case 1:
                 p2.health -= POWERUP_DAMAGE_1;
-                g_soundManager.play("boxHit");
+                g_g_soundManager.play("boxHit");
                 break;
             case 2:
                 p2.health -= POWERUP_DAMAGE_2;
-                g_soundManager.play("boxHit");
+                g_g_soundManager.play("boxHit");
                 break;
             case 3:
-                g_soundManager.play("fatality");
+                g_g_soundManager.play("fatality");
                 if(p2.health < POWERUP_HEAL_CAP_1)
                     p2.health += POWERUP_HEAL_1;
                 break;
             case 4:
-                g_soundManager.play("boxHit");
+                g_g_soundManager.play("boxHit");
                 if(p2.health < POWERUP_HEAL_CAP_2)
                     p2.health += POWERUP_HEAL_2;
                 break;
@@ -645,8 +643,7 @@ public:
             p1.arrow.position = p1.initial;
             p1.isShooting = false;
             p1.settingUp = true;
-            g_soundManager.play("wallHit")
-            
+            g_g_soundManager.play("wallHit");
         }
         if(boxCollision(boxes[1].position,p1.arrow.position,p1.arrow.radius,boxes[1].height,boxes[1].width)){
             if(!luck)
@@ -655,7 +652,7 @@ public:
             p1.arrow.position = p1.initial;
             p1.isShooting = false;
             p1.settingUp = true;
-            g_soundManager.play("wallHit")
+            g_g_soundManager.play("wallHit");
         }
         if(boxCollision(boxes[0].position,p2.arrow.position,p2.arrow.radius,boxes[0].height,boxes[0].width)){
             if(!luck)
@@ -664,7 +661,7 @@ public:
             p2.arrow.position = p2.initial;
             p2.isShooting = false;
             p2.settingUp = true;
-            g_soundManager.play("wallHit")
+            g_g_soundManager.play("wallHit");
         }
         if(boxCollision(boxes[1].position,p2.arrow.position,p2.arrow.radius,boxes[1].height,boxes[1].width)){
             if(!luck)
@@ -673,7 +670,7 @@ public:
             p2.arrow.position = p2.initial;
             p2.isShooting = false;
             p2.settingUp = true;
-            g_soundManager.play("wallHit")
+            g_g_soundManager.play("wallHit");
         }
         if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && GetMousePosition().y<150){
             if(GetMousePosition().x>SCREEN_WIDTH-130 && GetMousePosition().x<SCREEN_WIDTH-30 && GetMousePosition().y>50 && GetMousePosition().y<150){
@@ -739,13 +736,11 @@ int main(){
             game = make_unique<GamePlay<Player, Player>>(player1, Player({2 * SCREEN_WIDTH, SCREEN_HEIGHT - 150}, 100, {0, 234, 255, 255}, false, false), 2);
     };
     menu.getItem(1).onClick = [&gameState, &game,&player1, &single, &menu]{
-        cout<<single<<" single"<<endl;
         if(single)
             menu.selectMode(single,true);
         single = true;
     };
     menu.getItem(2).onClick = [&menu, &single]{
-        cout<<single<<" single"<<endl;
         if(!single)
             menu.selectMode(single, false);
         single = false;
@@ -761,16 +756,15 @@ int main(){
             game->round=d.getround();}
     };
     menu.getItem(4).onClick = []{
-        cout<<"Closing window!"<<endl;
         CloseWindow();
-        return 0;
+        exit(0);
     };
     Rectangle sourceRec = {0.0f, 0.0f, (float)bg.width, (float)bg.height};
     Rectangle destRec = {0.0f, 0.0f, (float)SCREEN_WIDTH, (float)SCREEN_HEIGHT};
     DrawTexturePro(bg, sourceRec, destRec, {0,0}, 0.0f, WHITE);
     SetTargetFPS(TARGET_FPS);
     g_soundManager.load("bgMusic", "bgmusic.mp3");
-    g_soundManager.play("bgMusic");
+    g_g_soundManager.play("bgMusic");
     while (WindowShouldClose() == false){
         BeginDrawing();
         switch(gameState) {
