@@ -112,10 +112,9 @@ class Arrow{
         DrawTexturePro(ball, {0, 0, float(ball.width), float(ball.height)}, {position.x, position.y, ball.width * 0.1f, ball.height * 0.1f}, {0, 0}, angle, WHITE);
     }
     void move(int x){
-        if (((position.x < SCREEN_WIDTH / 2 || (x > (SCREEN_WIDTH - 150) && x < ((SCREEN_WIDTH - 150) + initialVel.x))) && moveDir == 1) || ((position.x > SCREEN_WIDTH / 2 || (x < 150 && x > (150 - initialVel.x))) && moveDir == -1)) {
+        if (((position.x < SCREEN_WIDTH / 2 || (x > (SCREEN_WIDTH - 150) && x < ((SCREEN_WIDTH - 150) + initialVel.x))) && moveDir == 1) || ((position.x > SCREEN_WIDTH / 2 || (x < 150 && x > (150 - initialVel.x))) && moveDir == -1))
             position.x += moveDir * (velocity*power* 0.5* cos((angle * PI) / 180.0));
-            position.y -= (velocity* power * sin((angle * PI) / 180.0) - 0.5 * GRAVITY * time * time);
-        }
+        position.y -= (velocity* power * sin((angle * PI) / 180.0) - 0.5 * GRAVITY * time * time);
     }
     void reset(){
         time = 0;
