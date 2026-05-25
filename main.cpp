@@ -4,6 +4,8 @@
 #include <vector>
 #include <memory>
 #include <string>
+#include <thread>
+#include <chrono>
 #include "menu.h"
 #include "constants.h"
 #include "sound_manager.h"
@@ -71,41 +73,22 @@ class data{
     void savedata()
     {
         ofstream outfile;
-        try{
-            outfile.open("playerdata.txt");
-            if(!outfile.is_open()){
-                throw "File not opened";
-            }
+        outfile.open("playerdata.txt");
+        if(outfile.is_open()){
+            outfile << health1 << endl << health2 << endl << round;
+            outfile.close();
         }
-        catch(string err){
-            }
-        }
-        outfile << health1<<endl<<health2<<endl<<round;
-        outfile.close();
     }
     void readdata()
     {
         ifstream infile;
-        try{
-            infile.open("playerdata.txt");
-            if(!infile.is_open()){
-                throw "File not opened";
-            }
+        infile.open("playerdata.txt");
+        if(infile.is_open()){
+            infile >> health1;
+            infile >> health2;
+            infile >> round;
+            infile.close();
         }
-        catch(string err){
-        }
-        
-        for(int i = 0 ; i<4;i++)
-        {
-            if(i==0)
-            {infile >> health1;}
-            if(i==1){
-                infile >>health2;}
-            if(i==2){
-                infile>>round;
-            }
-        }
-        infile.close();
     }
 };
 
@@ -129,9 +112,10 @@ class Arrow{
         DrawTexturePro(ball, {0, 0, float(ball.width), float(ball.height)}, {position.x, position.y, ball.width * 0.1f, ball.height * 0.1f}, {0, 0}, angle, WHITE);
     }
     void move(int x){
-        if (((position.x < SCREEN_WIDTH / 2 || (x > (SCREEN_WIDTH - 150) && x < ((SCREEN_WIDTH - 150) + initialVel.x))) && moveDir == 1) || ((position.x > SCREEN_WIDTH / 2 || (x < 150 && x > (150 - initialVel.x))) && moveDir == -1))
+        if (((position.x < SCREEN_WIDTH / 2 || (x > (SCREEN_WIDTH - 150) && x < ((SCREEN_WIDTH - 150) + initialVel.x))) && moveDir == 1) || ((position.x > SCREEN_WIDTH / 2 || (x < 150 && x > (150 - initialVel.x))) && moveDir == -1)) {
             position.x += moveDir * (velocity*power* 0.5* cos((angle * PI) / 180.0));
             position.y -= (velocity* power * sin((angle * PI) / 180.0) - 0.5 * GRAVITY * time * time);
+        }
     }
     void reset(){
         time = 0;
@@ -423,7 +407,7 @@ public:
                     mouseDown = false;
                     turnPlayed = true;
                     shoot();
-                    g_g_soundManager.play("throw");
+                    g_soundManager.play("throw");
                     myShotsFired++;
                     targetSet = false;
                     shootTriggered = true;
@@ -479,19 +463,19 @@ class Powerups:public Box{
         switch (randomNumber){
             case 1:
                 p2.health -= POWERUP_DAMAGE_1;
-                g_g_soundManager.play("boxHit");
+                g_soundManager.play("boxHit");
                 break;
             case 2:
                 p2.health -= POWERUP_DAMAGE_2;
-                g_g_soundManager.play("boxHit");
+                g_soundManager.play("boxHit");
                 break;
             case 3:
-                g_g_soundManager.play("fatality");
+                g_soundManager.play("fatality");
                 if(p2.health < POWERUP_HEAL_CAP_1)
                     p2.health += POWERUP_HEAL_1;
                 break;
             case 4:
-                g_g_soundManager.play("boxHit");
+                g_soundManager.play("boxHit");
                 if(p2.health < POWERUP_HEAL_CAP_2)
                     p2.health += POWERUP_HEAL_2;
                 break;
@@ -643,7 +627,7 @@ public:
             p1.arrow.position = p1.initial;
             p1.isShooting = false;
             p1.settingUp = true;
-            g_g_soundManager.play("wallHit");
+            g_soundManager.play("wallHit");
         }
         if(boxCollision(boxes[1].position,p1.arrow.position,p1.arrow.radius,boxes[1].height,boxes[1].width)){
             if(!luck)
@@ -652,7 +636,7 @@ public:
             p1.arrow.position = p1.initial;
             p1.isShooting = false;
             p1.settingUp = true;
-            g_g_soundManager.play("wallHit");
+            g_soundManager.play("wallHit");
         }
         if(boxCollision(boxes[0].position,p2.arrow.position,p2.arrow.radius,boxes[0].height,boxes[0].width)){
             if(!luck)
@@ -661,7 +645,7 @@ public:
             p2.arrow.position = p2.initial;
             p2.isShooting = false;
             p2.settingUp = true;
-            g_g_soundManager.play("wallHit");
+            g_soundManager.play("wallHit");
         }
         if(boxCollision(boxes[1].position,p2.arrow.position,p2.arrow.radius,boxes[1].height,boxes[1].width)){
             if(!luck)
@@ -670,7 +654,7 @@ public:
             p2.arrow.position = p2.initial;
             p2.isShooting = false;
             p2.settingUp = true;
-            g_g_soundManager.play("wallHit");
+            g_soundManager.play("wallHit");
         }
         if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && GetMousePosition().y<150){
             if(GetMousePosition().x>SCREEN_WIDTH-130 && GetMousePosition().x<SCREEN_WIDTH-30 && GetMousePosition().y>50 && GetMousePosition().y<150){
@@ -728,7 +712,7 @@ int main(){
     Texture2D bottom = LoadTexture("bottom.png");
     unique_ptr<GamePlayBase> game;
     menu.getItem(0).onClick = [&gameState, &game,&player1, &single]{
-        _sleep(100);
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
         gameState = GameState::PLAYING;
         if(single)
             game = make_unique<GamePlay<Player, AutoPlayer>>(player1, AutoPlayer({2 * SCREEN_WIDTH, SCREEN_HEIGHT - 150}, 100, {0, 234, 255, 255}, false, false, 45, 0.6, 1), 2);
@@ -746,7 +730,7 @@ int main(){
         single = false;
     };
     menu.getItem(3).onClick = [&gameState, &game,&player1, &single,&h1,&h2,&il,&d]{
-        _sleep(100);
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
         gameState = GameState::PLAYING;
         if(single)
            { game = make_unique<GamePlay<Player, AutoPlayer>>(Player({150, SCREEN_HEIGHT - 150}, h1,{224, 16, 0, 255}, true, true), AutoPlayer({2 * SCREEN_WIDTH, SCREEN_HEIGHT - 150}, h2, {0, 234, 255, 255}, false, false, 45, 0.6, 1), 2);
@@ -764,7 +748,7 @@ int main(){
     DrawTexturePro(bg, sourceRec, destRec, {0,0}, 0.0f, WHITE);
     SetTargetFPS(TARGET_FPS);
     g_soundManager.load("bgMusic", "bgmusic.mp3");
-    g_g_soundManager.play("bgMusic");
+    g_soundManager.play("bgMusic");
     while (WindowShouldClose() == false){
         BeginDrawing();
         switch(gameState) {
