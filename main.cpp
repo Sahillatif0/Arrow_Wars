@@ -7,6 +7,7 @@
 #include "constants.h"
 #include "sound_manager.h"
 #include "ai_learning.h"
+#include "background.h"
 #include <cstdlib>
 #include <ctime>
 #include "titlescreen.h"
@@ -144,14 +145,17 @@ class PlayerKeys{
 class Player{
     public:
         Vector2 position, initial, arrowVel, mousePos, screenDiffPos;
+        Vector2 hitOffset, recoilVelocity, basePosition;
         int health, angle, velocity;
         Color color;
         double power, health2;
         Arrow arrow;
         bool isLeft, isShooting, turn, settingUp, mouseDown, turnPlayed;
+        bool isHit;
+        float hitTimer, hitDuration;
         Texture sprite;
         template<class, class> friend class GamePlay;
-        Player(Vector2 pos, int h = PLAYER_HEALTH, Color col = RED, bool isLeft = true, bool turn = false, int ang = BASE_ANGLE, double pow = BASE_POWER) : position(pos), health(h), health2(h), color(col), angle(ang), power(pow), isLeft(isLeft), isShooting(false), turn(turn), settingUp(false), mouseDown(false), screenDiffPos({SCREEN_DIFF_X, SCREEN_DIFF_Y}), velocity(SCREEN_DIFF_X/2), turnPlayed(false){
+        Player(Vector2 pos, int h = PLAYER_HEALTH, Color col = RED, bool isLeft = true, bool turn = false, int ang = BASE_ANGLE, double pow = BASE_POWER) : position(pos), health(h), health2(h), color(col), angle(ang), power(pow), isLeft(isLeft), isShooting(false), turn(turn), settingUp(false), mouseDown(false), screenDiffPos({SCREEN_DIFF_X, SCREEN_DIFF_Y}), velocity(SCREEN_DIFF_X/2), turnPlayed(false), isHit(false), hitTimer(0), hitDuration(0.5f), basePosition(pos), hitOffset({0, 0}), recoilVelocity({0, 0}){
             initial.x = isLeft ? SCREEN_DIFF_X : (SCREEN_WIDTH - SCREEN_DIFF_X);
             initial.y = SCREEN_HEIGHT - SCREEN_DIFF_Y;
             arrowVel = {float(velocity*cos(angle*PI/180.0)), float(velocity*sin(angle*PI/180.0))};
@@ -159,10 +163,38 @@ class Player{
             mousePos = initial;
             sprite = isLeft ? LoadTexture("assets/sprites.png") : LoadTexture("assets/Bluesprites2.png");
         }
+        void triggerHit() {
+            if (!isHit) {
+                isHit = true;
+                hitTimer = hitDuration;
+                recoilVelocity.x = isLeft ? -8.0f : 8.0f;
+                recoilVelocity.y = -5.0f;
+            }
+        }
+        void updateHitAnimation(float deltaTime) {
+            if (isHit) {
+                hitTimer -= deltaTime;
+                hitOffset.x += recoilVelocity.x * deltaTime * 60;
+                hitOffset.y += recoilVelocity.y * deltaTime * 60;
+                recoilVelocity.y += 15.0f * deltaTime;
+                if (hitTimer <= 0) {
+                    isHit = false;
+                    hitTimer = 0;
+                    hitOffset = {0, 0};
+                    recoilVelocity = {0, 0};
+                }
+            }
+        }
         void draw(){
             Rectangle sourceRec = {float((sprite.width / 31) * ((isLeft ? 0 : 31) - int(angle / 3))), float(sprite.height), sprite.width / 31, sprite.height};
-            Rectangle destRec = {isLeft ? position.x : position.x - sprite.width / 31, position.y - 300, sprite.width / 31, sprite.height};
+            Rectangle destRec = {isLeft ? position.x : position.x - sprite.width / 31, position.y - 300 + hitOffset.y, sprite.width / 31, sprite.height};
             DrawTexturePro(sprite, sourceRec, destRec, {0, 0}, 0.0f, WHITE);
+
+            if (isHit) {
+                float flash = (hitTimer / hitDuration) * 0.5f;
+                DrawRectangleRec(destRec, Fade(WHITE, flash));
+            }
+
             float x = initial.x, y = initial.y - sprite.height / 2 - 30;
             int sign = isLeft ? 1 : -1;
             if (mouseDown && turn){
@@ -209,6 +241,7 @@ class Player{
                 arrow.time += 1.0 / 20.0;
                 arrow.move(p2.position.x);
                 if (hscircleCollision(arrow.position, p2.position, arrow.radius, 300) && ((arrow.moveDir != 1 && p2.isLeft) || (arrow.moveDir == 1 && !p2.isLeft))){
+                    p2.triggerHit();
                     arrow.reset();
                     arrow.position = initial;
                     isShooting = false;
@@ -218,6 +251,7 @@ class Player{
                     g_aiLearning.recordPlayerShot(angle, power, HEADSHOT_DAMAGE, true);
                 }
                 if (circleCollision(arrow.position, p2.position, arrow.radius, 300) && ((arrow.moveDir != 1 && p2.isLeft) || (arrow.moveDir == 1 && !p2.isLeft))){
+                    p2.triggerHit();
                     soundManager.play("hitting");
                     arrow.reset();
                     arrow.position = initial;
@@ -300,7 +334,8 @@ class Player{
             }else
                 settingUp = false;
         }
-        void update(bool firstShoot){
+        void update(bool firstShoot, float deltaTime){
+            updateHitAnimation(deltaTime);
             if (health2 > health)
                 health2 -= 0.3;
             if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && turn && GetMousePosition().y>150)
@@ -403,7 +438,8 @@ public:
             }
             Player::updateArrow(p2);
         }
-        void update(bool first){
+        void update(bool first, float deltaTime){
+            updateHitAnimation(deltaTime);
             if (health2 > health)
                 health2 -= 0.3;
         }
@@ -484,9 +520,11 @@ class GamePlay:public GamePlayBase{
     OptionsScreen opMenu;
     bool options, menuOn, frShoot, soundEnabled;
     int fps;
+    float deltaTime;
+    Background background;
     SoundManager soundManager;
 public:
-    GamePlay(P1 p1, P2 p2, int nBox) : p1(p1),p2(p2),options(false), menuOn(false),frShoot(true), soundEnabled(true){
+    GamePlay(P1 p1, P2 p2, int nBox) : p1(p1),p2(p2),options(false), menuOn(false),frShoot(true), soundEnabled(true), deltaTime(1.0f/60.0f){
         soundManager.load("hitting", "hitting_sound.mp3");
         soundManager.load("throw", "throw.mp3");
         soundManager.load("boxHit", "box_hit.mp3");
@@ -644,12 +682,13 @@ public:
         }
         if(firstShoot)
             firstShoot = frShoot;
-        p1.update(firstShoot);
-        p2.update(firstShoot);
+        p1.update(firstShoot, deltaTime);
+        p2.update(firstShoot, deltaTime);
         p1.updateArrow(p2);
         p2.updateArrow(p1);
         if(!frShoot && fps%59==0)
             frShoot = true;
+        background.update(p1.position.x - SCREEN_WIDTH/2);
         checkWin();
         }
     }
@@ -658,6 +697,7 @@ public:
             showOptionsMenu(opMenu);
         }
         else{
+        background.draw();
         DrawTexturePro(pause,{0,0,float(pause.width), float(pause.height)},{SCREEN_WIDTH - 130, 50,0.1f*float(pause.width),0.1f*float(pause.width)},{0,0} , 0, WHITE);
         drawHealthBar();
         p1.draw();
@@ -746,10 +786,7 @@ int main(){
                 menu.checkMouse();
                 break;
             case GameState::PLAYING:
-                DrawTexturePro(bg, sourceRec, destRec, {0,0}, 0.0f, WHITE);
-                DrawTexturePro(bottom, sourceRec, destRec, {0,0}, 0.0f, WHITE);
                 DrawText(TextFormat("Round %i", game->round), SCREEN_WIDTH / 2 - 85, SCREEN_HEIGHT / 2 - 300, 50, WHITE);
-                ClearBackground(BLACK);
                 game->draw();
                 if(!menuMouseClick){
                     game->update(false);
