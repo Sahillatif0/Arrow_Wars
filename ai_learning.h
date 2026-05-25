@@ -4,6 +4,8 @@
 #include <vector>
 #include <algorithm>
 #include <cmath>
+#include <string>
+#include "constants.h"
 
 struct ShotRecord {
     int angle;
@@ -155,6 +157,6 @@ public:
     int getLosses() const { return losses; }
 };
 
-inline AILearning g_aiLearning;
+static AILearning g_aiLearning;
 
 #endif // AI_LEARNING_H

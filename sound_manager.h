@@ -4,6 +4,7 @@
 #include <raylib.h>
 #include <vector>
 #include <unordered_map>
+#include <string>
 
 class SoundManager {
     std::unordered_map<std::string, Sound> sounds;
@@ -40,4 +41,6 @@ public:
 };
 
 // Global sound manager instance
-inline SoundManager g_soundManager;
+static SoundManager g_soundManager;
+
+#endif // SOUND_MANAGER_H
