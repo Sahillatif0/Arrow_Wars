@@ -2,15 +2,13 @@
 #include <raylib.h>
 #include <cmath>
 #include <vector>
+#include <memory>
 #include "menu.h"
+#include "constants.h"
 #include <cstdlib>
 #include <ctime>
 #include "titlescreen.h"
 #include <fstream>
-
-const double gravity = 9.8;
-const int screenWidth = 1800;
-const int screenHeight = 920;
 
 using namespace std;
 
@@ -128,9 +126,9 @@ class Arrow{
         DrawTexturePro(ball, {0, 0, float(ball.width), float(ball.height)}, {position.x, position.y, ball.width * 0.1f, ball.height * 0.1f}, {0, 0}, angle, WHITE);
     }
     void move(int x){
-        if (((position.x < screenWidth / 2 || (x > (screenWidth - 150) && x < ((screenWidth - 150) + initialVel.x))) && moveDir == 1) || ((position.x > screenWidth / 2 || (x < 150 && x > (150 - initialVel.x))) && moveDir == -1))
+        if (((position.x < SCREEN_WIDTH / 2 || (x > (SCREEN_WIDTH - 150) && x < ((SCREEN_WIDTH - 150) + initialVel.x))) && moveDir == 1) || ((position.x > SCREEN_WIDTH / 2 || (x < 150 && x > (150 - initialVel.x))) && moveDir == -1))
             position.x += moveDir * (velocity*power* 0.5* cos((angle * PI) / 180.0));
-            position.y -= (velocity* power * sin((angle * PI) / 180.0) - 0.5 * gravity * time * time);
+            position.y -= (velocity* power * sin((angle * PI) / 180.0) - 0.5 * GRAVITY * time * time);
     }
     void reset(){
         time = 0;
@@ -151,11 +149,11 @@ class Player{
         bool isLeft, isShooting, turn, settingUp, mouseDown, turnPlayed;
         Texture sprite;
         template<class, class> friend class GamePlay;
-        Player(Vector2 pos, int h = 100, Color col = RED, bool isLeft = true, bool turn = false, int ang = 45, double pow = 0.6) : position(pos), health(h), health2(h), color(col), angle(ang), power(pow), isLeft(isLeft), isShooting(false), turn(turn), settingUp(false), mouseDown(false), screenDiffPos({150, 150}), velocity(screenDiffPos.x/2), turnPlayed(false){
-            initial.x = isLeft ? screenDiffPos.x : (screenWidth - screenDiffPos.x);
-            initial.y = screenHeight - screenDiffPos.y;
+        Player(Vector2 pos, int h = PLAYER_HEALTH, Color col = RED, bool isLeft = true, bool turn = false, int ang = BASE_ANGLE, double pow = BASE_POWER) : position(pos), health(h), health2(h), color(col), angle(ang), power(pow), isLeft(isLeft), isShooting(false), turn(turn), settingUp(false), mouseDown(false), screenDiffPos({SCREEN_DIFF_X, SCREEN_DIFF_Y}), velocity(SCREEN_DIFF_X/2), turnPlayed(false){
+            initial.x = isLeft ? SCREEN_DIFF_X : (SCREEN_WIDTH - SCREEN_DIFF_X);
+            initial.y = SCREEN_HEIGHT - SCREEN_DIFF_Y;
             arrowVel = {float(velocity*cos(angle*PI/180.0)), float(velocity*sin(angle*PI/180.0))};
-            arrow = Arrow(initial, arrowVel,velocity, 5, angle,power, color, (isLeft) ? 1 : -1);
+            arrow = Arrow(initial, arrowVel,velocity, ARROW_RADIUS, angle,power, color, (isLeft) ? 1 : -1);
             mousePos = initial;
             sprite = isLeft ? LoadTexture("assets/sprites.png") : LoadTexture("assets/Bluesprites2.png");
         }
@@ -171,7 +169,7 @@ class Player{
                     DrawCircle(x, y, (5 - 5*float(i / 30)), Fade(color, power * 0.03 * i + 0.25));
                     time += 1/20.0;
                     // cout<<"y: "<<y<<" x:"<<x<<" TIME: "<<time<<endl;
-                    y -= (velocity* power * sin((angle * PI) / 180.0) - 0.5 * gravity * time * time);
+                    y -= (velocity* power * sin((angle * PI) / 180.0) - 0.5 * GRAVITY * time * time);
                     x += sign * 0.5* (velocity*power * cos((angle * PI) / 180.0));
                 }
                 cout<<endl<<endl<<endl;
@@ -193,7 +191,7 @@ class Player{
         }
         template <class P> void updateArrow(P &p2){
             if (turn){
-                float x = isLeft ? (screenWidth - screenDiffPos.x) : screenDiffPos.x, y = screenHeight - 200;
+                float x = isLeft ? (SCREEN_WIDTH - screenDiffPos.x) : screenDiffPos.x, y = SCREEN_HEIGHT - 200;
                 string dist_str = to_string(abs(int(p2.position.x - arrow.position.x))) + "m";
                 DrawText(dist_str.c_str(), x, y, 20, WHITE);
                 DrawLineEx(Vector2{x, y + 30}, Vector2{x + 50, y + 30}, 2, p2.color);
@@ -228,13 +226,13 @@ class Player{
                 }
                 if(p2.health<0)
                     p2.health = 0;
-                if(arrow.position.y > screenHeight){
+                if(arrow.position.y > SCREEN_HEIGHT){
                     arrow.reset();
                     arrow.position = initial;
                     isShooting = false;
                     settingUp = true;
                 }
-                if((arrow.position.x > screenWidth/2 && isLeft) || (arrow.position.x < screenWidth/2 && !isLeft)){
+                if((arrow.position.x > SCREEN_WIDTH/2 && isLeft) || (arrow.position.x < SCREEN_WIDTH/2 && !isLeft)){
                     position.x-= arrow.moveDir*(arrow.velocity*power*cos((angle*PI)/180.0));
                     p2.position.x-= arrow.moveDir*(arrow.velocity*power*cos((angle*PI)/180.0));
                 }
@@ -271,19 +269,19 @@ class Player{
                     }
                 }
                 else{
-                    if(p2.position.x<(screenWidth - screenDiffPos.x)){
-                        if((screenWidth - screenDiffPos.x)-p2.position.x<moveAmount){
-                            p2.position.x+=((screenWidth - screenDiffPos.x)-p2.position.x);
-                            position.x+=((screenWidth - screenDiffPos.x)-p2.position.x);
+                    if(p2.position.x<(SCREEN_WIDTH - screenDiffPos.x)){
+                        if((SCREEN_WIDTH - screenDiffPos.x)-p2.position.x<moveAmount){
+                            p2.position.x+=((SCREEN_WIDTH - screenDiffPos.x)-p2.position.x);
+                            position.x+=((SCREEN_WIDTH - screenDiffPos.x)-p2.position.x);
                         }
                         else{
                             p2.position.x+=moveAmount;
                             position.x+=moveAmount;
                         }}
-                    else if(p2.position.x>(screenWidth - screenDiffPos.x)){
-                        if(p2.position.x-(screenWidth - screenDiffPos.x)<moveAmount){
-                            p2.position.x-=(p2.position.x - (screenWidth - screenDiffPos.x));
-                            position.x-=(p2.position.x - (screenWidth - screenDiffPos.x));
+                    else if(p2.position.x>(SCREEN_WIDTH - screenDiffPos.x)){
+                        if(p2.position.x-(SCREEN_WIDTH - screenDiffPos.x)<moveAmount){
+                            p2.position.x-=(p2.position.x - (SCREEN_WIDTH - screenDiffPos.x));
+                            position.x-=(p2.position.x - (SCREEN_WIDTH - screenDiffPos.x));
                         }
                         else{
                             p2.position.x-=moveAmount;
@@ -395,15 +393,15 @@ class Box{
     Vector2 position;
     Texture boxmain;
     double height, width;
-    float scale, screenHeightDiff;
+    float scale, SCREEN_HEIGHTDiff;
     int boxNo;
     bool sound;
     public:
     template<class, class> friend class GamePlay;
-    Box(float diff, int n=1):screenHeightDiff(diff),boxNo(n),scale(0.8), sound(true){
+    Box(float diff, int n=1):SCREEN_HEIGHTDiff(diff),boxNo(n),scale(0.8), sound(true){
         boxmain = LoadTexture("assets/box.png");
         width = 306*scale, height = 296*scale;
-        position.y = float(screenHeight-(0.7)*screenHeightDiff-((boxmain.height*scale)/2+height/2)-((height+5)*(boxNo-1)));
+        position.y = float(SCREEN_HEIGHT-(0.7)*SCREEN_HEIGHTDiff-((boxmain.height*scale)/2+height/2)-((height+5)*(boxNo-1)));
     }
     virtual void draw(Player p1, Player p2)=0;
 };
@@ -413,7 +411,7 @@ class Powerups:public Box{
     Powerups(float diff, int n=1):Box(diff,n){
         boxmain = LoadTexture("assets/box.png");
         width = 306*scale, height = 296*scale;
-        position.y = float(screenHeight-(0.7)*screenHeightDiff-((boxmain.height*scale)/2+height/2)-((height+5)*(boxNo-1)));
+        position.y = float(SCREEN_HEIGHT-(0.7)*SCREEN_HEIGHTDiff-((boxmain.height*scale)/2+height/2)-((height+5)*(boxNo-1)));
     }
     void draw(Player p1, Player p2)
     {
@@ -528,23 +526,23 @@ public:
     }
     bool getMenuOn(){return menuOn;}
     void drawHealthBar(){
-        float healthWidthFactor = (screenWidth / 2 - (10 * 12)) / 200.0, rounded = 1.0;
-        DrawRectangleRounded({(screenWidth / 4), 40, screenWidth / 2, screenHeight / 10}, 2, 5, Color({44, 0, 81, 255}));
-        DrawRectangleRounded({(screenWidth / 4) + 10, 50, healthWidthFactor * 100, screenHeight / 10 - 20}, rounded, 5, Color(BLACK));
-        DrawRectangleRounded({float((0.75 * screenWidth) - 10 - healthWidthFactor * 100), 50, healthWidthFactor * 100, screenHeight / 10 - 20}, rounded, 5, Color(BLACK));
-        DrawRectangleRounded({(screenWidth / 4) + 10, 50, float(p1.health2) * healthWidthFactor, screenHeight / 10 - 20}, rounded, 5, Fade(p1.color, 0.5));
-        DrawRectangleRounded({float((0.75 * screenWidth) - 10 - (p2.health2) * healthWidthFactor), 50, float(p2.health2) * healthWidthFactor, screenHeight / 10 - 20}, rounded, 5, Fade(p2.color, 0.5));
-        DrawRectangleRounded({(screenWidth / 4) + 10, 50, float(p1.health) * healthWidthFactor, screenHeight / 10 - 20}, rounded, 5, p1.color);
-        DrawRectangleRounded({float((0.75 * screenWidth) - 10 - (p2.health) * healthWidthFactor), 50, float(p2.health) * healthWidthFactor, screenHeight / 10 - 20}, rounded, 5, p2.color);
+        float healthWidthFactor = (SCREEN_WIDTH / 2 - (10 * 12)) / 200.0, rounded = 1.0;
+        DrawRectangleRounded({(SCREEN_WIDTH / 4), 40, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 10}, 2, 5, Color({44, 0, 81, 255}));
+        DrawRectangleRounded({(SCREEN_WIDTH / 4) + 10, 50, healthWidthFactor * 100, SCREEN_HEIGHT / 10 - 20}, rounded, 5, Color(BLACK));
+        DrawRectangleRounded({float((0.75 * SCREEN_WIDTH) - 10 - healthWidthFactor * 100), 50, healthWidthFactor * 100, SCREEN_HEIGHT / 10 - 20}, rounded, 5, Color(BLACK));
+        DrawRectangleRounded({(SCREEN_WIDTH / 4) + 10, 50, float(p1.health2) * healthWidthFactor, SCREEN_HEIGHT / 10 - 20}, rounded, 5, Fade(p1.color, 0.5));
+        DrawRectangleRounded({float((0.75 * SCREEN_WIDTH) - 10 - (p2.health2) * healthWidthFactor), 50, float(p2.health2) * healthWidthFactor, SCREEN_HEIGHT / 10 - 20}, rounded, 5, Fade(p2.color, 0.5));
+        DrawRectangleRounded({(SCREEN_WIDTH / 4) + 10, 50, float(p1.health) * healthWidthFactor, SCREEN_HEIGHT / 10 - 20}, rounded, 5, p1.color);
+        DrawRectangleRounded({float((0.75 * SCREEN_WIDTH) - 10 - (p2.health) * healthWidthFactor), 50, float(p2.health) * healthWidthFactor, SCREEN_HEIGHT / 10 - 20}, rounded, 5, p2.color);
         Rectangle sourceRec = {0.0f, 0.0f, (float)Skull.width, (float)Skull.height};
-        Rectangle destRec = {float((screenWidth / 2) - Skull.width * 0.125), 30.0f, Skull.width * 0.25f, Skull.height * 0.25f};
+        Rectangle destRec = {float((SCREEN_WIDTH / 2) - Skull.width * 0.125), 30.0f, Skull.width * 0.25f, Skull.height * 0.25f};
         DrawTexturePro(Skull, sourceRec, destRec, {0, 0}, 0.0f, WHITE);
         }
         void checkWin(){
         if (p1.health <= 0 || p2.health <= 0 || p1.health2 <= 0 || p2.health2 <= 0){
             if (p1.health <= 0 || p1.health2 <= 0){
-                DrawText("BLUE WINS", screenWidth / 2 - 250, screenHeight / 2 - 30, 100, WHITE);
-                DrawText("Press Space To Continue", screenWidth / 2 - 320, screenHeight / 2 + 100, 50, WHITE);
+                DrawText("BLUE WINS", SCREEN_WIDTH / 2 - 250, SCREEN_HEIGHT / 2 - 30, 100, WHITE);
+                DrawText("Press Space To Continue", SCREEN_WIDTH / 2 - 320, SCREEN_HEIGHT / 2 + 100, 50, WHITE);
                 if (IsKeyDown(KEY_SPACE))
                 {
                     ClearBackground(BLACK);
@@ -557,8 +555,8 @@ public:
                 }
             }
             else{
-                DrawText("RED WINS", screenWidth / 2 - 250, screenHeight / 2 - 30, 100, WHITE);
-                DrawText("Press Space To Continue", screenWidth / 2 - 320, screenHeight / 2 + 100, 50, WHITE);
+                DrawText("RED WINS", SCREEN_WIDTH / 2 - 250, SCREEN_HEIGHT / 2 - 30, 100, WHITE);
+                DrawText("Press Space To Continue", SCREEN_WIDTH / 2 - 320, SCREEN_HEIGHT / 2 + 100, 50, WHITE);
                 if (IsKeyDown(KEY_SPACE))
                 {
                     ClearBackground(BLACK);
@@ -634,7 +632,7 @@ public:
             }
         }
         if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && GetMousePosition().y<150){
-            if(GetMousePosition().x>screenWidth-130 && GetMousePosition().x<screenWidth-30 && GetMousePosition().y>50 && GetMousePosition().y<150){
+            if(GetMousePosition().x>SCREEN_WIDTH-130 && GetMousePosition().x<SCREEN_WIDTH-30 && GetMousePosition().y>50 && GetMousePosition().y<150){
                 options = true;
             }
         }
@@ -654,7 +652,7 @@ public:
             showOptionsMenu(opMenu);
         }
         else{
-        DrawTexturePro(pause,{0,0,float(pause.width), float(pause.height)},{screenWidth - 130, 50,0.1f*float(pause.width),0.1f*float(pause.width)},{0,0} , 0, WHITE);
+        DrawTexturePro(pause,{0,0,float(pause.width), float(pause.height)},{SCREEN_WIDTH - 130, 50,0.1f*float(pause.width),0.1f*float(pause.width)},{0,0} , 0, WHITE);
         drawHealthBar();
         p1.draw();
         p2.draw();
@@ -662,6 +660,9 @@ public:
             boxes[i].draw(p1,p2);
         }
     }
+};
+class ArcadeGameplay:public GamePlayBase{
+    
 };
 int main(){
     data d;
@@ -671,11 +672,11 @@ int main(){
     bool il = d.getisleft();
     srand(time(nullptr));
     InitAudioDevice();
-    InitWindow(screenWidth, screenHeight, "ARROW WARS!");
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "ARROW WARS!");
     TitleScreen s1;
     Menu menu;
     addMenu(menu);
-    Player player1({150, screenHeight - 150}, 100,{224, 16, 0, 255}, true, true);
+    Player player1({150, SCREEN_HEIGHT - 150}, 100,{224, 16, 0, 255}, true, true);
     bool menuOn = true, menuMouseClick=false, loading= true, single=true;
     Texture2D bg = LoadTexture("back.png");
     Texture2D bottom = LoadTexture("bottom.png");
@@ -684,9 +685,9 @@ int main(){
         _sleep(100);
         menuOn = false;
         if(single)
-            game = new GamePlay<Player, AutoPlayer>(player1, AutoPlayer({2 * screenWidth, screenHeight - 150}, 100, {0, 234, 255, 255}, false, false, 45, 0.6, 1), 2);
+            game = new GamePlay<Player, AutoPlayer>(player1, AutoPlayer({2 * SCREEN_WIDTH, SCREEN_HEIGHT - 150}, 100, {0, 234, 255, 255}, false, false, 45, 0.6, 1), 2);
         else
-            game = new GamePlay<Player, Player>(player1, Player({2 * screenWidth, screenHeight - 150}, 100, {0, 234, 255, 255}, false, false), 2);
+            game = new GamePlay<Player, Player>(player1, Player({2 * SCREEN_WIDTH, SCREEN_HEIGHT - 150}, 100, {0, 234, 255, 255}, false, false), 2);
     };
     menu.getItem(1).onClick = [&menuOn, &game,&player1, &single, &menu]{
         cout<<single<<" single"<<endl;
@@ -704,10 +705,10 @@ int main(){
         _sleep(100);
         menuOn = false;
         if(single)
-           { game = new GamePlay<Player, AutoPlayer>(Player({150, screenHeight - 150}, h1,{224, 16, 0, 255}, true, true), AutoPlayer({2 * screenWidth, screenHeight - 150}, h2, {0, 234, 255, 255}, false, false, 45, 0.6, 1), 2);
+           { game = new GamePlay<Player, AutoPlayer>(Player({150, SCREEN_HEIGHT - 150}, h1,{224, 16, 0, 255}, true, true), AutoPlayer({2 * SCREEN_WIDTH, SCREEN_HEIGHT - 150}, h2, {0, 234, 255, 255}, false, false, 45, 0.6, 1), 2);
             (*game).round=d.getround();}
         else
-           { game = new GamePlay<Player, Player>(Player({150, screenHeight - 150}, h1,{224, 16, 0, 255}, true, true), Player({2 * screenWidth, screenHeight - 150}, h2, {0, 234, 255, 255}, false, false), 2);
+           { game = new GamePlay<Player, Player>(Player({150, SCREEN_HEIGHT - 150}, h1,{224, 16, 0, 255}, true, true), Player({2 * SCREEN_WIDTH, SCREEN_HEIGHT - 150}, h2, {0, 234, 255, 255}, false, false), 2);
             (*game).round=d.getround();}
     };
     menu.getItem(4).onClick = []{
@@ -716,7 +717,7 @@ int main(){
         return 0;
     };
     Rectangle sourceRec = {0.0f, 0.0f, (float)bg.width, (float)bg.height};
-    Rectangle destRec = {0.0f, 0.0f, (float)screenWidth, (float)screenHeight};
+    Rectangle destRec = {0.0f, 0.0f, (float)SCREEN_WIDTH, (float)SCREEN_HEIGHT};
     DrawTexturePro(bg, sourceRec, destRec, {0,0}, 0.0f, WHITE);
     SetTargetFPS(60);
     Sound backgroundMusic = LoadSound("bgmusic.mp3");
@@ -732,7 +733,7 @@ int main(){
         else{
             DrawTexturePro(bg, sourceRec, destRec, {0,0}, 0.0f, WHITE);
             DrawTexturePro(bottom, sourceRec, destRec, {0,0}, 0.0f, WHITE);
-            DrawText(TextFormat("Round %i", game->round), screenWidth / 2 - 85, screenHeight / 2 - 300, 50, WHITE);
+            DrawText(TextFormat("Round %i", game->round), SCREEN_WIDTH / 2 - 85, SCREEN_HEIGHT / 2 - 300, 50, WHITE);
             ClearBackground(BLACK);
             game->draw();
             if(!menuMouseClick){
