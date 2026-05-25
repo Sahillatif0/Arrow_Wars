@@ -357,23 +357,25 @@ public:
             if(turn && !turnPlayed){
                 mouseDown = true;
                 if(!targetSet){
-                    int level = g_aiLearning.getDifficultyLevel();
-                    int predictedAngle = g_aiLearning.predictBestAngle(p2.angle, p2.power);
-                    int predictedPower = g_aiLearning.predictBestPower(p2.power);
+                    // Direct targeting as fallback - aim at player position
+                    int level = g_aiLearning.getTotalRounds();
 
-                    double accuracy = g_aiLearning.getAdaptiveAccuracy();
-                    int randOffset = (rand() % 21) - 10;
+                    // In early rounds or with no data, use direct targeting
+                    int directAngle = -30 + (isLeft ? 5 : -5); // Aim upward toward opponent
+                    int directPower = 60 + (rand() % 20);
 
-                    if (level == 1) randOffset = (rand() % 41) - 20;
-                    else if (level == 3) randOffset = (rand() % 11) - 5;
+                    if (level >= 3) {
+                        // Use learning after 3+ rounds
+                        int predictedAngle = g_aiLearning.predictBestAngle(p2.angle, p2.power);
+                        int predictedPower = g_aiLearning.predictBestPower(p2.power);
 
-                    double missChance = (1.0 - accuracy);
-                    if ((rand() % 100) / 100.0 < missChance) {
-                        randOffset = (rand() % 30) - 15;
+                        targetAngle = predictedAngle + (rand() % 11) - 5; // Smaller random offset
+                        targetPower = predictedPower / 100.0;
+                    } else {
+                        // Direct targeting for early rounds - more accurate
+                        targetAngle = directAngle + (rand() % 21) - 10;
+                        targetPower = directPower / 100.0;
                     }
-
-                    targetAngle = predictedAngle + randOffset;
-                    targetPower = (predictedPower + (randOffset * 3)) / 100.0;
 
                     if(targetAngle < MIN_ANGLE) targetAngle = MIN_ANGLE;
                     if(targetAngle > MAX_ANGLE) targetAngle = MAX_ANGLE;
