@@ -336,18 +336,17 @@ class AutoPlayer: public Player{
             if(turn && !turnPlayed){
                 mouseDown = true;
                 if(!targetSet){
-                    randAngle:
-                    targetAngle = rand()%(p2.angle==-5?p2.angle+7:p2.angle+5) + p2.angle - 10;
-                    if(targetAngle<-45 || targetAngle>90)
-                        goto randAngle;
+                    do {
+                        targetAngle = rand()%(p2.angle==-5?p2.angle+7:p2.angle+5) + p2.angle - 10;
+                    } while(targetAngle < MIN_ANGLE || targetAngle > MAX_ANGLE);
                     targetPower = (rand()%(int (p2.power*100)+10) + p2.power*100 - 20)/100.0;
-                    if(targetPower<0)
-                        targetPower = 0;
-                    if(targetPower>1)
-                        targetPower = 1;
+                    if(targetPower < MIN_POWER)
+                        targetPower = MIN_POWER;
+                    if(targetPower > MAX_POWER)
+                        targetPower = MAX_POWER;
                     targetSet = true;
                 }
-                if(targetAngle <= 90 && targetAngle >= -45 && angle!=targetAngle){
+                if(targetAngle <= MAX_ANGLE && targetAngle >= MIN_ANGLE && angle!=targetAngle){
                     int diff = abs(targetAngle - angle)/5 + 1;
                     if(targetAngle>angle+diff)
                         angle+=diff;
@@ -356,7 +355,7 @@ class AutoPlayer: public Player{
                     else
                         angle = targetAngle;
                 }
-                if(targetPower <= 1 && targetPower >= 0 && !((power+0.009)>targetPower && (power-0.009)<targetPower)){
+                if(targetPower <= MAX_POWER && targetPower >= MIN_POWER && !((power+0.009)>targetPower && (power-0.009)<targetPower)){
                     double diff = abs(targetPower - power)/5.0;
                     if(targetPower>(power+diff))
                         power+=diff;
