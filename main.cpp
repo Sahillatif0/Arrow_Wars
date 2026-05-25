@@ -6,6 +6,7 @@
 #include "menu.h"
 #include "constants.h"
 #include "sound_manager.h"
+#include "ai_learning.h"
 #include <cstdlib>
 #include <ctime>
 #include "titlescreen.h"
@@ -214,6 +215,7 @@ class Player{
                     settingUp = true;
                     p2.health -= HEADSHOT_DAMAGE;
                     soundManager.play("hitting");
+                    g_aiLearning.recordPlayerShot(angle, power, HEADSHOT_DAMAGE, true);
                 }
                 if (circleCollision(arrow.position, p2.position, arrow.radius, 300) && ((arrow.moveDir != 1 && p2.isLeft) || (arrow.moveDir == 1 && !p2.isLeft))){
                     soundManager.play("hitting");
@@ -222,6 +224,7 @@ class Player{
                     isShooting = false;
                     settingUp = true;
                     p2.health -= BODYYSHOT_DAMAGE;
+                    g_aiLearning.recordPlayerShot(angle, power, BODYYSHOT_DAMAGE, true);
                 }
                 if(p2.health<0)
                     p2.health = 0;
@@ -320,6 +323,7 @@ class Player{
                 soundManager.play("throw");
                 mouseDown = false;
                 turnPlayed = true;
+                g_aiLearning.recordPlayerShot(angle, power, 0, false);
                 mousePos = initial;
             }
         }
@@ -328,20 +332,38 @@ class AutoPlayer: public Player{
     int smartness, targetAngle, fps;
     double targetPower;
     bool targetSet, shootTriggered;
-    public:
-        AutoPlayer(Vector2 pos, int h = 100, Color col = RED, bool isLeft = true, bool turn = false, int ang = 45, double pow = 0.6, int smartness = 1):Player(pos, h, col, isLeft, turn, ang, pow), smartness(smartness), targetSet(false), shootTriggered(false), fps(0){}
+    int myShotsFired;
+    int myShotsHit;
+
+public:
+    AutoPlayer(Vector2 pos, int h = PLAYER_HEALTH, Color col = RED, bool isLeft = true, bool turn = false, int ang = BASE_ANGLE, double pow = BASE_POWER, int smart = 1):Player(pos, h, col, isLeft, turn, ang, pow), smartness(smart), targetSet(false), shootTriggered(false), fps(0), myShotsFired(0), myShotsHit(0){}
         template<class P> void updateArrow(P &p2){
             if(turn && !turnPlayed){
                 mouseDown = true;
                 if(!targetSet){
-                    do {
-                        targetAngle = rand()%(p2.angle==-5?p2.angle+7:p2.angle+5) + p2.angle - 10;
-                    } while(targetAngle < MIN_ANGLE || targetAngle > MAX_ANGLE);
-                    targetPower = (rand()%(int (p2.power*100)+10) + p2.power*100 - 20)/100.0;
-                    if(targetPower < MIN_POWER)
-                        targetPower = MIN_POWER;
-                    if(targetPower > MAX_POWER)
-                        targetPower = MAX_POWER;
+                    int level = g_aiLearning.getDifficultyLevel();
+                    int predictedAngle = g_aiLearning.predictBestAngle(p2.angle, p2.power);
+                    int predictedPower = g_aiLearning.predictBestPower(p2.power);
+
+                    double accuracy = g_aiLearning.getAdaptiveAccuracy();
+                    int randOffset = (rand() % 21) - 10;
+
+                    if (level == 1) randOffset = (rand() % 41) - 20;
+                    else if (level == 3) randOffset = (rand() % 11) - 5;
+
+                    double missChance = (1.0 - accuracy);
+                    if ((rand() % 100) / 100.0 < missChance) {
+                        randOffset = (rand() % 30) - 15;
+                    }
+
+                    targetAngle = predictedAngle + randOffset;
+                    targetPower = (predictedPower + (randOffset * 3)) / 100.0;
+
+                    if(targetAngle < MIN_ANGLE) targetAngle = MIN_ANGLE;
+                    if(targetAngle > MAX_ANGLE) targetAngle = MAX_ANGLE;
+                    if(targetPower < MIN_POWER) targetPower = MIN_POWER;
+                    if(targetPower > MAX_POWER) targetPower = MAX_POWER;
+
                     targetSet = true;
                 }
                 if(targetAngle <= MAX_ANGLE && targetAngle >= MIN_ANGLE && angle!=targetAngle){
@@ -369,12 +391,16 @@ class AutoPlayer: public Player{
                     turnPlayed = true;
                     shoot();
                     g_soundManager.play("throw");
+                    myShotsFired++;
                     targetSet = false;
                     shootTriggered = true;
                 }
             }
             if(p2.turn)
                 shootTriggered = false;
+            if(!p2.isShooting && p2.turnPlayed && p2.health2 < p2.health) {
+                myShotsHit++;
+            }
             Player::updateArrow(p2);
         }
         void update(bool first){
@@ -494,10 +520,10 @@ public:
         round++;
     }
     void restartGame(){
-        p1.health = 100;
-        p1.health2 = 100;
-        p2.health = 100;
-        p2.health2 = 100;
+        p1.health = PLAYER_HEALTH;
+        p1.health2 = PLAYER_HEALTH;
+        p2.health = PLAYER_HEALTH;
+        p2.health2 = PLAYER_HEALTH;
         round = 1;
     }
     void soundOnOff(){
@@ -536,10 +562,11 @@ public:
                 if (IsKeyDown(KEY_SPACE))
                 {
                     ClearBackground(BLACK);
-                    p1.health = 100;
-                    p1.health2 = 100;
-                    p2.health = 100;
-                    p2.health2 = 100;
+                    p1.health = PLAYER_HEALTH;
+                    p1.health2 = PLAYER_HEALTH;
+                    p2.health = PLAYER_HEALTH;
+                    p2.health2 = PLAYER_HEALTH;
+                    g_aiLearning.onRoundEnd(true);
                     ++(*this);
                     return ;
                 }
@@ -550,10 +577,11 @@ public:
                 if (IsKeyDown(KEY_SPACE))
                 {
                     ClearBackground(BLACK);
-                    p1.health = 100;
-                    p1.health2 = 100;
-                    p2.health = 100;
-                    p2.health2 = 100;
+                    p1.health = PLAYER_HEALTH;
+                    p1.health2 = PLAYER_HEALTH;
+                    p2.health = PLAYER_HEALTH;
+                    p2.health2 = PLAYER_HEALTH;
+                    g_aiLearning.onRoundEnd(false);
                     ++(*this);
                     return;
                 }
