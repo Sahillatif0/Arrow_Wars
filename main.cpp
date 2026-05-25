@@ -697,9 +697,9 @@ int main(){
     Rectangle sourceRec = {0.0f, 0.0f, (float)bg.width, (float)bg.height};
     Rectangle destRec = {0.0f, 0.0f, (float)SCREEN_WIDTH, (float)SCREEN_HEIGHT};
     DrawTexturePro(bg, sourceRec, destRec, {0,0}, 0.0f, WHITE);
-    SetTargetFPS(60);
-    Sound backgroundMusic = LoadSound("bgmusic.mp3");
-    PlaySound(backgroundMusic);
+    SetTargetFPS(TARGET_FPS);
+    g_soundManager.load("bgMusic", "bgmusic.mp3");
+    g_soundManager.play("bgMusic");
     while (WindowShouldClose() == false){
         BeginDrawing();
         if(loading)
