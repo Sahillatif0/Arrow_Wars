@@ -29,6 +29,8 @@ const int POWERUP_DAMAGE_1 = 30;
 const int POWERUP_DAMAGE_2 = 40;
 const int POWERUP_HEAL_1 = 10;
 const int POWERUP_HEAL_2 = 20;
+const int POWERUP_HEAL_CAP_1 = 90;
+const int POWERUP_HEAL_CAP_2 = 80;
 
 // UI dimensions
 const float TITLE_SCALE = 0.3f;
