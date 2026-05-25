@@ -679,14 +679,14 @@ int main(){
     bool menuOn = true, menuMouseClick=false, loading= true, single=true;
     Texture2D bg = LoadTexture("back.png");
     Texture2D bottom = LoadTexture("bottom.png");
-    GamePlayBase *game;
+    unique_ptr<GamePlayBase> game;
     menu.getItem(0).onClick = [&menuOn, &game,&player1, &single]{
         _sleep(100);
         menuOn = false;
         if(single)
-            game = new GamePlay<Player, AutoPlayer>(player1, AutoPlayer({2 * SCREEN_WIDTH, SCREEN_HEIGHT - 150}, 100, {0, 234, 255, 255}, false, false, 45, 0.6, 1), 2);
+            game = make_unique<GamePlay<Player, AutoPlayer>>(player1, AutoPlayer({2 * SCREEN_WIDTH, SCREEN_HEIGHT - 150}, 100, {0, 234, 255, 255}, false, false, 45, 0.6, 1), 2);
         else
-            game = new GamePlay<Player, Player>(player1, Player({2 * SCREEN_WIDTH, SCREEN_HEIGHT - 150}, 100, {0, 234, 255, 255}, false, false), 2);
+            game = make_unique<GamePlay<Player, Player>>(player1, Player({2 * SCREEN_WIDTH, SCREEN_HEIGHT - 150}, 100, {0, 234, 255, 255}, false, false), 2);
     };
     menu.getItem(1).onClick = [&menuOn, &game,&player1, &single, &menu]{
         cout<<single<<" single"<<endl;
@@ -704,11 +704,11 @@ int main(){
         _sleep(100);
         menuOn = false;
         if(single)
-           { game = new GamePlay<Player, AutoPlayer>(Player({150, SCREEN_HEIGHT - 150}, h1,{224, 16, 0, 255}, true, true), AutoPlayer({2 * SCREEN_WIDTH, SCREEN_HEIGHT - 150}, h2, {0, 234, 255, 255}, false, false, 45, 0.6, 1), 2);
-            (*game).round=d.getround();}
+           { game = make_unique<GamePlay<Player, AutoPlayer>>(Player({150, SCREEN_HEIGHT - 150}, h1,{224, 16, 0, 255}, true, true), AutoPlayer({2 * SCREEN_WIDTH, SCREEN_HEIGHT - 150}, h2, {0, 234, 255, 255}, false, false, 45, 0.6, 1), 2);
+            game->round=d.getround();}
         else
-           { game = new GamePlay<Player, Player>(Player({150, SCREEN_HEIGHT - 150}, h1,{224, 16, 0, 255}, true, true), Player({2 * SCREEN_WIDTH, SCREEN_HEIGHT - 150}, h2, {0, 234, 255, 255}, false, false), 2);
-            (*game).round=d.getround();}
+           { game = make_unique<GamePlay<Player, Player>>(Player({150, SCREEN_HEIGHT - 150}, h1,{224, 16, 0, 255}, true, true), Player({2 * SCREEN_WIDTH, SCREEN_HEIGHT - 150}, h2, {0, 234, 255, 255}, false, false), 2);
+            game->round=d.getround();}
     };
     menu.getItem(4).onClick = []{
         cout<<"Closing window!"<<endl;
