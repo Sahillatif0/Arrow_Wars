@@ -357,23 +357,22 @@ public:
             if(turn && !turnPlayed){
                 mouseDown = true;
                 if(!targetSet){
-                    // Direct targeting as fallback - aim at player position
                     int level = g_aiLearning.getTotalRounds();
 
-                    // In early rounds or with no data, use direct targeting
-                    int directAngle = -30 + (isLeft ? 5 : -5); // Aim upward toward opponent
-                    int directPower = 60 + (rand() % 20);
+                    // Direct targeting - aim to hit opponent
+                    int directAngle = 10 + (rand() % 6); // 10-15 degrees
+                    int directPower = 70 + (rand() % 21); // 70-90 power
 
-                    if (level >= 3) {
-                        // Use learning after 3+ rounds
+                    if (level >= 5) {
+                        // Use learning after 5+ rounds
                         int predictedAngle = g_aiLearning.predictBestAngle(p2.angle, p2.power);
                         int predictedPower = g_aiLearning.predictBestPower(p2.power);
 
-                        targetAngle = predictedAngle + (rand() % 11) - 5; // Smaller random offset
+                        targetAngle = predictedAngle + (rand() % 11) - 5;
                         targetPower = predictedPower / 100.0;
                     } else {
-                        // Direct targeting for early rounds - more accurate
-                        targetAngle = directAngle + (rand() % 21) - 10;
+                        // Direct targeting - reliable arc to hit opponent
+                        targetAngle = directAngle;
                         targetPower = directPower / 100.0;
                     }
 
