@@ -655,19 +655,22 @@ int main(){
     Menu menu;
     addMenu(menu);
     Player player1({150, SCREEN_HEIGHT - 150}, 100,{224, 16, 0, 255}, true, true);
-    bool menuOn = true, menuMouseClick=false, loading= true, single=true;
+    bool menuMouseClick=false, single=true;
+    GameState gameState = GameState::LOADING;
+    bool loading = true;
+    OptionsScreen opMenu;
     Texture2D bg = LoadTexture("back.png");
     Texture2D bottom = LoadTexture("bottom.png");
     unique_ptr<GamePlayBase> game;
-    menu.getItem(0).onClick = [&menuOn, &game,&player1, &single]{
+    menu.getItem(0).onClick = [&gameState, &game,&player1, &single]{
         _sleep(100);
-        menuOn = false;
+        gameState = GameState::PLAYING;
         if(single)
             game = make_unique<GamePlay<Player, AutoPlayer>>(player1, AutoPlayer({2 * SCREEN_WIDTH, SCREEN_HEIGHT - 150}, 100, {0, 234, 255, 255}, false, false, 45, 0.6, 1), 2);
         else
             game = make_unique<GamePlay<Player, Player>>(player1, Player({2 * SCREEN_WIDTH, SCREEN_HEIGHT - 150}, 100, {0, 234, 255, 255}, false, false), 2);
     };
-    menu.getItem(1).onClick = [&menuOn, &game,&player1, &single, &menu]{
+    menu.getItem(1).onClick = [&gameState, &game,&player1, &single, &menu]{
         cout<<single<<" single"<<endl;
         if(single)
             menu.selectMode(single,true);
@@ -679,9 +682,9 @@ int main(){
             menu.selectMode(single, false);
         single = false;
     };
-    menu.getItem(3).onClick = [&menuOn, &game,&player1, &single,&h1,&h2,&il,&d]{
+    menu.getItem(3).onClick = [&gameState, &game,&player1, &single,&h1,&h2,&il,&d]{
         _sleep(100);
-        menuOn = false;
+        gameState = GameState::PLAYING;
         if(single)
            { game = make_unique<GamePlay<Player, AutoPlayer>>(Player({150, SCREEN_HEIGHT - 150}, h1,{224, 16, 0, 255}, true, true), AutoPlayer({2 * SCREEN_WIDTH, SCREEN_HEIGHT - 150}, h2, {0, 234, 255, 255}, false, false, 45, 0.6, 1), 2);
             game->round=d.getround();}
@@ -702,23 +705,35 @@ int main(){
     g_soundManager.play("bgMusic");
     while (WindowShouldClose() == false){
         BeginDrawing();
-        if(loading)
-            loading = s1.draw();
-        else if(menuOn){
-            showMenu(menu);
-            menu.checkMouse();
-        }
-        else{
-            DrawTexturePro(bg, sourceRec, destRec, {0,0}, 0.0f, WHITE);
-            DrawTexturePro(bottom, sourceRec, destRec, {0,0}, 0.0f, WHITE);
-            DrawText(TextFormat("Round %i", game->round), SCREEN_WIDTH / 2 - 85, SCREEN_HEIGHT / 2 - 300, 50, WHITE);
-            ClearBackground(BLACK);
-            game->draw();
-            if(!menuMouseClick){
-                game->update(false);
-                menuMouseClick = true;
-            }
-            else game->update(true);
+        switch(gameState) {
+            case GameState::LOADING:
+                loading = s1.draw();
+                if (!loading) {
+                    loading = true;
+                    gameState = GameState::MENU;
+                }
+                break;
+            case GameState::MENU:
+                showMenu(menu);
+                menu.checkMouse();
+                break;
+            case GameState::PLAYING:
+                DrawTexturePro(bg, sourceRec, destRec, {0,0}, 0.0f, WHITE);
+                DrawTexturePro(bottom, sourceRec, destRec, {0,0}, 0.0f, WHITE);
+                DrawText(TextFormat("Round %i", game->round), SCREEN_WIDTH / 2 - 85, SCREEN_HEIGHT / 2 - 300, 50, WHITE);
+                ClearBackground(BLACK);
+                game->draw();
+                if(!menuMouseClick){
+                    game->update(false);
+                    menuMouseClick = true;
+                }
+                else game->update(true);
+                break;
+            case GameState::OPTIONS:
+                showOptionsMenu(opMenu);
+                break;
+            case GameState::WIN:
+                break;
         }
         EndDrawing();
     }

@@ -5,6 +5,15 @@
 const int SCREEN_WIDTH = 1800;
 const int SCREEN_HEIGHT = 920;
 
+// Game states
+enum class GameState {
+    LOADING,
+    MENU,
+    PLAYING,
+    OPTIONS,
+    WIN
+};
+
 // Physics
 const double GRAVITY = 9.8;
 const int BASE_VELOCITY = 50;
